@@ -66,8 +66,8 @@ Ly = ney-swy # Height of the model domain
 ztop = 0. # Model top elevation
 zbot = -50. # Model bottom elevation
 nlay = 1 # Number of model layers
-dx = 2500 # grid spacing (x-direction)
-dy = 2500 # grid spacing (y-direction)
+dx = 1000 # grid spacing (x-direction)
+dy = 1000 # grid spacing (y-direction)
 nrow = int(Ly/dy) # Number of rows
 ncol = int(Lx/dx) # Number of columns
 nper = 1 #specify number of stress periods
@@ -128,7 +128,7 @@ rch = flopy.modflow.mfrch.ModflowRch(model=m,nrchop=3,rech=1e-3)
 '''Create the river package'''
 #----------------------------------------------------------------------------
 # import stage, stream order, stream length, and centroid coordinate of rivers
-dfriv = pd.read_csv('ModelGrid_2500ft_river_cells_centroids.csv')
+dfriv = pd.read_csv('rivers_625.csv')
 # trim dataframe with river information to model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
 dfriv = dfriv.loc[dfriv['lamx']>swx]
