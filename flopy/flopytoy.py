@@ -15,6 +15,7 @@ import flopy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mp
+import pyproj
 #----------------------------------------------------------------------------
 
 
@@ -29,16 +30,43 @@ m = flopy.modflow.Modflow(modelname, exe_name = 'mf2005')
 
 '''Create the Discretization package'''
 #----------------------------------------------------------------------------
+# Define model domain in lat/long coordinates
+sw_lat = 41.411972 #southwest latitude
+sw_long =  -88.241971 #southwest longitude
+ne_lat =  41.72910 #northeast latitude
+ne_long = -88.030337 #northeast longitude
+
+D = {'proj': 'lcc', # Lambert Conformal Conic
+     'ellps': 'clrk66',
+     'lon_0': -89.5,
+     'lat_0': 33,
+     'lat_1': 33,
+     'lat_2': 45,
+     'x_0': 2999994*0.3048,
+     'y_0': 0}
+
+prj = pyproj.Proj(D)
+
+nex, ney = prj(ne_long, ne_lat) #Define NE corner; long associated with x, lat with y
+nex, ney = round(nex/0.3048, -4), round(ney/3.048, -4)
+
+swx, swy = prj(sw_long, sw_lat)
+swx, swy = round(swx/0.3048, -4), round(swy/3.048, -4)
+
+print(nex, ney, swx, swy)
+
 # Assign Discretization variables
-Lx = 100. # Width of the model domain
-Ly = 100. # Height of the model domain
+Lx = nex-swx # Width of the model domain
+Ly = ney-swy # Height of the model domain
 ztop = 0. # Model top elevation
 zbot = -50. # Model bottom elevation
 nlay = 1 # Number of model layers
-nrow = 10 # Number of rows
-ncol = 10 # Number of columns
-dx = Lx/ncol # grid spacing (x-direction)
-dy = Ly/nrow # grid spacing (y-direction)
+dx = 2500
+dy = 2500
+nrow = int(Ly/dy) # Number of rows
+ncol = int(Lx/dx) # Number of columns
+print(nrow, ncol)
+
 nper = 1 #specify number of stress periods
 steady = [True] #specify if stress period is transient or steady-state
 
@@ -89,7 +117,7 @@ lpf = flopy.modflow.ModflowLpf(model=m, hk=hk, vka=vk, laytyp=laytyp, ipakcb=1)
 
 '''Create a recharge package'''
 #----------------------------------------------------------------------------
-
+rch = flopy.modflow.mfrch.ModflowRch(model=m,rech=0.001 )
 #----------------------------------------------------------------------------
 
 
