@@ -52,7 +52,7 @@ D = {'proj': 'lcc', # define projection as Lambert Conformal Conic
 
 prj = pyproj.Proj(D) # Create a projection object that will be used to convert lat/long to illimap
 
-#Define the northeastern coordintes, round to nearest 10,000
+#Define the northeastern coordinates, round to nearest 10,000
 nex, ney = prj(ne_long, ne_lat) # this will return meters
 nex, ney = round(nex/0.3048006096012192,-4), round(ney/0.3048006096012192,-4) # convert to feet
 
