@@ -5,6 +5,7 @@ DIS               11  my_model.dis
 BAS6              13  my_model.bas
 LPF               15  my_model.lpf
 RCH               19  my_model.rch
+RIV               18  my_model.riv
 OC                14  my_model.oc
 PCG               27  my_model.pcg
 DATA(BINARY)       1  my_model.cbc REPLACE

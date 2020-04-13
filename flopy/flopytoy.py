@@ -15,9 +15,10 @@ import flopy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mp
+import pandas as pd
 import pyproj
 #----------------------------------------------------------------------------
-
+#%%
 
 
 '''Create a MODFLOW model object and run with MODFLOW 2005.'''
@@ -31,10 +32,10 @@ m = flopy.modflow.Modflow(modelname, exe_name = 'mf2005')
 '''Create the Discretization package'''
 #----------------------------------------------------------------------------
 #Define lat and long coordinate boundary of model
-sw_lat = 41.411972
-sw_long = -88.241971
-ne_lat = 41.729100
-ne_long = -88.030337
+sw_lat = 41.411972 #southwest latitude
+sw_long = -88.241971 #southwest longitude
+ne_lat = 41.729100 #northeast latitude
+ne_long = -88.030337 #northeast longitude
 
 D = {'proj':'lcc', #Lambert conformal conic
      'ellps':'clrk66',
@@ -46,6 +47,8 @@ D = {'proj':'lcc', #Lambert conformal conic
      'y_0': 0}
 
 prj = pyproj.Proj(D)
+
+#wgs84=pyproj.Proj('epsg:4326')  - I need conda install not pip install for this
 
 nex, ney = prj(ne_long, ne_lat)
 nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
@@ -59,8 +62,8 @@ Ly = ney-swy # Height of the model domain
 ztop = 0. # Model top elevation
 zbot = -50. # Model bottom elevation
 nlay = 1 # Number of model layers
-dx = 2500 # grid spacing (x-direction)
-dy = 2500 # grid spacing (y-direction)
+dx = 1000 # grid spacing (x-direction)
+dy = 1000 # grid spacing (y-direction)
 nrow = int(Ly/dy) # Number of rows
 ncol = int(Lx/dx) # Number of columns
 
@@ -75,8 +78,6 @@ dis = flopy.modflow.ModflowDis(model=m, nlay=nlay, nrow=nrow, ncol=ncol,
                                itmuni = 4, lenuni = 1, 
                                nper=nper, steady=steady)
 #----------------------------------------------------------------------------
-
-
 
 '''Create the Basic Package, which contains ibound and starting heads'''
 #----------------------------------------------------------------------------
@@ -116,9 +117,37 @@ lpf = flopy.modflow.ModflowLpf(model=m, hk=hk, vka=vk, laytyp=laytyp, ipakcb=1)
 #----------------------------------------------------------------------------
 rch = flopy.modflow.mfrch.ModflowRch(model=m,rech=0.00001)
 #----------------------------------------------------------------------------
+#%%
+'''Create a River Package'''
+#import stage, lambert x, lambert y
+dfriv=pd.read_csv('rivers_625.csv')
 
+#trim dataframe with river information to the model domain
+dfriv=dfriv.loc[dfriv['lamx']<nex]
+dfriv=dfriv.loc[dfriv['lamy']<ney]
+dfriv=dfriv.loc[dfriv['lamx']>swx]
+dfriv=dfriv.loc[dfriv['lamy']>swy]
 
+#assign all rivers to the upper layer
+dfriv['lay']=0
+#convert lamx to column and lamy to row
+dfriv['row']=np.trunc((ney-dfriv['lamy'])/dy)
+dfriv['col']=np.trunc((dfriv['lamx']-swx)/dx)
+#define the river stage
+dfriv['stage']=dfriv['rvr_stg']
+#define the conductance
+dfriv['cond']=5000 #ft^2/day
+dfriv['bot']=dfriv['stage']-3
+#drop unneeded files
+dfriv=dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lamy'],axis=1)
 
+#put into a format that MODFLOW wants
+arriv=dfriv.values
+riverdata={0:arriv}
+
+flopy.modflow.mfriv.ModflowRiv(model=m,ipakcb=None,stress_period_data=riverdata)
+
+#%%
 '''Create the Output Control Package'''
 #----------------------------------------------------------------------------
 #create oc stress period data. 
@@ -177,6 +206,7 @@ plt.figure(figsize=(10,10)) #create 10 x 10 figure
 modelmap = flopy.plot.PlotMapView(model=m, layer=0)
 grid = modelmap.plot_grid()
 ib = modelmap.plot_ibound()
+rvr=modelmap.plot_bc(ftype='RIV')
 #add labels and legend
 plt.xlabel('Lx (ft)',fontsize = 14)
 plt.ylabel('Ly (ft)',fontsize = 14)
