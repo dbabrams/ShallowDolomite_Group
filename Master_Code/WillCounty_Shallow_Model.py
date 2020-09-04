@@ -18,6 +18,10 @@ X Download MF2005, MFNWT, and MT3DMS executable files
 '''
 
 
+#%%
+import os
+os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
+
 #%% IMPORT PACKAGES
 
 #--------------------------------------------------
