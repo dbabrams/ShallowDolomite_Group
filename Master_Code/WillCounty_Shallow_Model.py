@@ -10,8 +10,8 @@ Created on Thu Sep  3 14:59:49 2020
 '''
 To-Do:
 
-- Download TIFs, so we don't need to import them from Google Drive
-- Download MF2005, MFNWT, and MT3DMS executable files
+X Download TIFs so we don't need to import them from Google Drive
+X Download MF2005, MFNWT, and MT3DMS executable files
 - Add in code for RMS error
 - Ignore deprecation warnings produced when creating the error map
 - Remove sections of code for uploading files to Colab
@@ -22,32 +22,22 @@ To-Do:
 
 #--------------------------------------------------
 
-import flopy # import FloPy to develop, run, and analyze the model
-from flopy.utils import Raster # plot rasters with FloPy
+import flopy #import FloPy to develop, run, and analyze the model
+from flopy.utils import Raster #plot rasters with FloPy
 import matplotlib as mp
 import pandas as pd
-import pyproj # change between WGS84 and Illimap coordinates
-import rasterio  # import rasters
+import pyproj #change between WGS84 and Illimap coordinates
+import rasterio  #import rasters
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 import numpy as np
 import cartopy
-import cartopy.crs as ccrs # import projections
-import cartopy.feature as cf # import features
+import cartopy.crs as ccrs #import projections
+import cartopy.feature as cf #import features
 from pykrige.uk import UniversalKriging
-import pylab # used as a plotting library for spatial data, make contours
+import pylab #used as a plotting library for spatial data, make contours
 from metpy.plots import USCOUNTIES
-
-#--------------------------------------------------
-# Packages related to Google Drive
-
-# the following code authorizes you to access files on Google Drive
-from google.colab import drive
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-from google.colab import auth, files
-from oauth2client.client import GoogleCredentials
 
 #%% IMPORT FILES FROM GOOGLE DRIVE
 
