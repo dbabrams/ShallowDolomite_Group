@@ -43,54 +43,6 @@ from pykrige.uk import UniversalKriging
 import pylab #used as a plotting library for spatial data, make contours
 from metpy.plots import USCOUNTIES
 
-#%% IMPORT FILES FROM GOOGLE DRIVE
-
-#--------------------------------------------------
-# DEM
-
-# First import the land surface .tif from Google Drive
-downloaded = drive.CreateFile({'id':"1389l8sgQ8-tsmIZuZosaqvbqpHY40n6l"}) # ft above msl
-downloaded.GetContentFile('landsurface_el.tif')
-
-# First import the bedrock elevation .tif from Google Drive
-downloaded = drive.CreateFile({'id':"1EZgZDjjILzvRzvY9nf0Qp0NHmspRq4kP"})   
-downloaded.GetContentFile('bedrock_el.tif')
-
-# Read in percent thickness of coarse grain for each model layer
-downloaded = drive.CreateFile({'id':"18Kw3O6qCzIJ2L6KrVnRPIhea_F8VwyWn"})   
-downloaded.GetContentFile('percentl1.tif')
-
-downloaded = drive.CreateFile({'id':"1oZinFPKrGY-FXoE7Zu0okFpAAOe_bwau"})   
-downloaded.GetContentFile('percentl2.tif')
-
-downloaded = drive.CreateFile({'id':"1FqVEr4m_ElUyEZeyfnCMwVGDfUqavJZH"})   
-downloaded.GetContentFile('percentl3.tif')
-
-downloaded = drive.CreateFile({'id':"1KiHS9TLSP1GAVTjaaJZS4BAwF6gnUeDu"})   
-downloaded.GetContentFile('percentl4.tif')
-
-downloaded = drive.CreateFile({'id':"1Z-9EyaAK1NKnRHAlnyGYkI3suvBFC2I6"})   
-downloaded.GetContentFile('percentl5.tif')
-
-downloaded = drive.CreateFile({'id':"1pcB9aJpJGfkXOKz10rhs6MpWkQL1_dqr"})   
-downloaded.GetContentFile('percentl6.tif')
-
-downloaded = drive.CreateFile({'id':"1Fnh0HIKbUj7pEtlsUKR_Sr7WwfYzWul5"})   
-downloaded.GetContentFile('percentl7.tif')
-
-downloaded = drive.CreateFile({'id':"106JacgpwSA3wVAGcBIzGdc8rDVUB6dh7"})   
-downloaded.GetContentFile('percentl8.tif')
-
-downloaded = drive.CreateFile({'id':"1WJjhVJ_KSBhZDrgzY3YteNjxaz5nxBid"})   
-downloaded.GetContentFile('percentl9.tif')
-
-#--------------------------------------------------
-# Rivers
-
-# First import the Excel file from Google Drive
-downloaded = drive.CreateFile({'id':"1JsAiGG4RvcfYrQtfgXRW9ZVfAkQ1yRVu"})
-downloaded.GetContentFile('rivers_625.csv')
-
 #%% MODEL SETUP
 
 #--------------------------------------------------
@@ -146,7 +98,7 @@ steady = [True] #specify if stress period is transient or steady-state
 # Define river elevations
 
 # Import river stage, lambert x, lambert y from river Excel file
-dfriv = pd.read_csv('rivers_625.csv')
+dfriv = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\rivers_625.csv')
 
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
@@ -172,7 +124,7 @@ dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lam
 dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 
 # Import river stage, lambert x, lambert y from river Excel file
-dfriv = pd.read_csv('rivers_625.csv')
+dfriv = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\rivers_625.csv')
 
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
@@ -201,8 +153,8 @@ dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 # Define top and bottom elevations
 
 # Now load the raster using FloPy's built in Raster toolbox
-illinoisdem = Raster.load("landsurface_el.tif")
-bedrock = Raster.load("bedrock_el.tif")
+illinoisdem = Raster.load(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\landsurface_el.tif')
+bedrock = Raster.load(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\bedrock_el.tif')
 
 # Crop the DEM to the model domain
 illinoisdem.crop([(swx,swy),(swx,ney),(nex,ney),(nex,swy)])
@@ -282,15 +234,15 @@ def kloader(rastername, kc, kf, threshold):
   percentgrid[percentgrid<threshold] = kf #assign fine k value
   return percentgrid
 
-kl1 = kloader('percentl1.tif',kc,kf,threshold)
-kl2 = kloader('percentl2.tif',kc,kf,threshold)
-kl3 = kloader('percentl3.tif',kc,kf,threshold)
-kl4 = kloader('percentl4.tif',kc,kf,threshold)
-kl5 = kloader('percentl5.tif',kc,kf,threshold)
-kl6 = kloader('percentl6.tif',kc,kf,threshold)
-kl7 = kloader('percentl7.tif',kc,kf,threshold)
-kl8 = kloader('percentl8.tif',kc,kf,threshold)
-kl9 = kloader('percentl9.tif',kc,kf,threshold)
+kl1 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl1.tif',kc,kf,threshold)
+kl2 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl2.tif',kc,kf,threshold)
+kl3 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl3.tif',kc,kf,threshold)
+kl4 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl4.tif',kc,kf,threshold)
+kl5 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl5.tif',kc,kf,threshold)
+kl6 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl6.tif',kc,kf,threshold)
+kl7 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl7.tif',kc,kf,threshold)
+kl8 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl8.tif',kc,kf,threshold)
+kl9 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl9.tif',kc,kf,threshold)
 kl10 = kl9-kl9+kb
 
 khlayers = [kl1,kl2,kl3,kl4,kl5,kl6,kl7,kl8,kl9,kl10]
@@ -300,7 +252,7 @@ kvlayers=np.divide(khlayers,10.)
 # Define wells
 
 # Import well data from .csv file
-dfwel = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/2002_pumping_V2.csv?token=AOLJKYQ7WAUJVO2JL55VRYK7BYM4C')
+dfwel = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/2002_pumping_V2.csv?token=AOLJKYV7J7XWA4OWQGGUF2C7MOGJC')
 dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
 # Trim dataframe with well information to the model domain
@@ -359,8 +311,10 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 # Create the MODFLOW model object
 
 # Create a MODFLOW model object and run with MODFLOW 2005.
-modelname = "my_model" # name the model
-m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = 'mf2005') # create model object m
+modelname = 'my_model' # name the model
+exe_dir = r'D:\Documents\GitHub\ShallowDolomite_Group\executables\mf2005.exe' #define the file path for the mf2005 executable
+model_dir = r'D:\Documents\GitHub' #define the file path for any model files
+m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = exe_dir, model_ws = model_dir) #create model object m 
 
 #--------------------------------------------------
 # Append the discretization package to the model object
@@ -628,6 +582,8 @@ if not success:
 
 #%% PLOT OUTPUT DATA
 
+os.chdir(r'D:\Documents\GitHub')
+
 #--------------------------------------------------
 '''Extract binary data from head and flow files'''
 
@@ -695,7 +651,7 @@ plt.show()
 
 # Import the observation well data as a dataframe
 # "SB_Potent_Surface_points.csv"
-pumping_ob = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/SB_Potent_Surface_points.csv?token=AOLJKYVBUPMW5FKZK2TPE427BYM5W')
+pumping_ob = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/SB_Potent_Surface_points.csv?token=AOLJKYUTFIE2W5QLUZZA5KK7MO6CO')
 
 # Trim the dataframe to the model domain
 pumping_ob = pumping_ob.loc[pumping_ob['lambx']<nex]
