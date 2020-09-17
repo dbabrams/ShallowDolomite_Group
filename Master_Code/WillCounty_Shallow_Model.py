@@ -10,13 +10,11 @@ Created on Thu Sep  3 14:59:49 2020
 '''
 To-Do:
 
-X Download TIFs so we don't need to import them from Google Drive
-X Download MF2005, MFNWT, and MT3DMS executable files
-- Add in code for RMS error
-- Ignore deprecation warnings produced when creating the error map
-- Remove sections of code for uploading files to Colab
-'''
+- 
+- 
+- 
 
+'''
 
 #%%
 import os
@@ -28,9 +26,11 @@ os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
 
 import flopy #import FloPy to develop, run, and analyze the model
 from flopy.utils import Raster #plot rasters with FloPy
+import math
 import matplotlib as mp
 import pandas as pd
 import pyproj #change between WGS84 and Illimap coordinates
+from pyproj import Transformer
 import rasterio  #import rasters
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -65,15 +65,18 @@ illimap = {'proj': 'lcc', # code for Lambert Conformal Conic
      'x_0': 2999994*0.3048,
      'y_0': 0}
 
-prj = pyproj.Proj(illimap) #define "prj" as the illimap coordinate system
+#prj = pyproj.Proj(illimap) #define "prj" as the illimap coordinate system
 
-wgs84 = pyproj.Proj("epsg:4326") #define "wgs84" as the EPSG 4326 / WGS84 coordinate system
+#wgs84 = pyproj.Proj("epsg:4326") #define "wgs84" as the EPSG 4326 / WGS84 coordinate system
+
+# Define the transformation from lat/long (WGS84, or EPSG 4326) to Lambert x/y (Illimap)
+transformer = Transformer.from_crs("epsg:4326", illimap)
 
 # Note that WGS84 and EPSG 4326 are equivalent
 
 # Transform the coordinates of the NE and SW corners from WGS84 (lat and long) to Illimap (x and y)
-nex, ney = pyproj.transform(wgs84,illimap,ne_lat,ne_long) 
-swx, swy = pyproj.transform(wgs84,illimap,sw_lat,sw_long)
+nex, ney = transformer.transform(ne_lat, ne_long)
+swx, swy = transformer.transform(sw_lat, sw_long)
 
 # Convert nex, ney, swx, swy from m to ft and round
 nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
@@ -691,12 +694,15 @@ mean_abs = pumping_ob.absolute.mean()
 print("Mean Error:", round(mean,1), 'ft')
 print("Mean Absolute Error:", round(mean_abs,1), 'ft')
 
-# Calculate the standard deviation of absolute error
-sum1 = 0
-for i in pumping_ob.absolute.values:
-  sum1 += (i - mean_abs)**2
-std = np.sqrt(sum1/len(pumping_ob.absolute.values))
-print('Standard Deviation:', std)
+# Calculate the standard deviation of the error
+pumping_ob['diff^2'] = (pumping_ob.error-mean)**2
+std = math.sqrt(pumping_ob['diff^2'].mean())
+print('Standard Deviation:', round(std,1), 'ft')
+ 
+# Calculate the RMS error
+pumping_ob['error^2'] = pumping_ob.error**2
+RMS = math.sqrt(np.mean(pumping_ob['error^2']))
+print('RMS error:', round(RMS,1), 'ft')
 
 #--------------------------------------------------
 
@@ -771,21 +777,24 @@ plt.show()
 
 # Define the area over which to plot data
 
+# Define the transformation from Lambert x/y (Illimap) to lat/long (WGS84, or EPSG 4326)
+transformer_to_wgs84 = Transformer.from_crs(illimap,"epsg:4326")
+
 # Create and populate new columns in the "pumping_ob" dataframe for the latitudes and longitudes of each observation well
 for value in pumping_ob.index:
-  pumping_ob.loc[value,'lat'], pumping_ob.loc[value,'long'] = pyproj.transform(illimap,wgs84,pumping_ob.loc[value,'lambx']*0.3048,pumping_ob.loc[value,'lamby']*0.3048) #must convert Lambert x/y from ft to m
+  pumping_ob.loc[value,'lat'], pumping_ob.loc[value,'long'] = transformer_to_wgs84.transform(pumping_ob.loc[value,'lambx']*0.3048,pumping_ob.loc[value,'lamby']*0.3048) #must convert Lambert x/y from ft to m (*0.3048) before transforming to lat/long
 
-#Conduct the Universal Kriging
+# Conduct the Universal Kriging
 UK = UniversalKriging(pumping_ob['long'], pumping_ob['lat'],pumping_ob['error'], variogram_model='spherical',nlags=6)
 
-#Create xpoints and ypoints in space, with 0.01 spacing
+# Create xpoints and ypoints in space, with 0.01 spacing
 xpoints = np.arange(sw_long,ne_long,0.01)
 ypoints = np.arange(sw_lat,ne_lat,0.01)
 
-# create a meshgrid with xpoints and ypoints, to be used later in the code
+# Create a meshgrid with xpoints and ypoints, to be used later in the code
 X,Y = np.meshgrid(xpoints,ypoints)
 
-# calculate the interpolated grid and fill values.
+# Calculate the interpolated grid and fill values.
 z, var = UK.execute('grid', xpoints, ypoints)
 z = z.filled(fill_value=None)
 
@@ -855,7 +864,7 @@ cset_fill=plt.imshow(z,vmin=-100,vmax=100,cmap=plt.cm.coolwarm,origin='lower',ex
 #cset_fill = plt.contourf(X,Y,z,vmin=-100,vmax=100,cmap=plt.cm.coolwarm)
 
 # Label contours (makes use of pylab)
-pylab.clabel(cset_contour, inline=1, fontsize=10,fmt='%1.0f',colors='black')
+pylab.clabel(cset_contour, inline=True, fontsize=10,fmt='%1.0f',colors='black')
 
 # Plot the points that were measured
 points=plt.scatter(pumping_ob['long'], pumping_ob['lat'], marker=".", color="black", label="Data Points")
@@ -989,10 +998,8 @@ cbc_f = flopy.utils.binaryfile.CellBudgetFile(modelname+'.cbc')
 
 # Import a zone input file
 # The zone input file is a text file that assigns a zone to each cell in the model
-uploaded = files.upload() #upload the most recent zone input file.  Be sure to match the file name below to the actual name of the file you would like to upload.
-zon = flopy.utils.zonbud.read_zbarray('zone_file_65x65.txt') #read_zbarray is used to read in the zone input file as an array
+zon = flopy.utils.zonbud.read_zbarray(r'D:\Documents\GitHub\ShallowDolomite_Group\zonebudget\zone_input_file.txt') #read_zbarray is used to read in the zone input file as an array
 
-del uploaded
 
 # Create a ZoneBudget object and get the budget record array
 # set zone 1 as "upper half"; zone 2 as "lower half"
@@ -1005,11 +1012,3 @@ zb.get_budget()
 
 # Note:  The zone input file only needs to be uploaded once.  Check the "Files" tab on the left to see if it has already been uploaded.
 # If the zone input file has already been uploaded, you can click "Cancel upload" in the output window below.
-
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
