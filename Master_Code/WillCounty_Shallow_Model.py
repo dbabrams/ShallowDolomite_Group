@@ -126,32 +126,6 @@ dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lam
 # Group duplicate rivers within a cell
 dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 
-# Import river stage, lambert x, lambert y from river Excel file
-dfriv = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\rivers_625.csv')
-
-# Trim dataframe with river information to the model domain
-dfriv = dfriv.loc[dfriv['lamx']<nex]
-dfriv = dfriv.loc[dfriv['lamy']<ney]
-dfriv = dfriv.loc[dfriv['lamx']>swx]
-dfriv = dfriv.loc[dfriv['lamy']>swy]
-
-# Assign all rivers to the upper layer
-dfriv['lay'] = 0 #this actually assigns it to layer 1
-# Convert lamx to column and lamy to row
-dfriv['row'] = np.trunc((ney-dfriv['lamy'])/dy)
-dfriv['col'] = np.trunc((dfriv['lamx']-swx)/dx)
-# Define the river stage
-dfriv['stage'] = dfriv['rvr_stg']
-# Define the conductance
-dfriv['cond'] = 90000. #ft^2/d (this value was adjusted during calibration)
-# Define the river bottom
-dfriv['bot'] = dfriv['stage']-3
-# Drop unneeded columns
-dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lamy'],axis=1)
-
-# Group duplicate rivers within a cell
-dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
-
 #--------------------------------------------------
 # Define top and bottom elevations
 
