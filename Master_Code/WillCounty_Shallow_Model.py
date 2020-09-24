@@ -229,7 +229,7 @@ kvlayers=np.divide(khlayers,10.)
 # Define wells
 
 # Import well data from .csv file
-dfwel = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/2002_pumping_V2.csv?token=AOLJKYV7J7XWA4OWQGGUF2C7MOGJC')
+dfwel = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\pumping\2002_pumping_V2.csv')
 dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
 # Trim dataframe with well information to the model domain
@@ -628,7 +628,7 @@ plt.show()
 
 # Import the observation well data as a dataframe
 # "SB_Potent_Surface_points.csv"
-pumping_ob = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/SB_Potent_Surface_points.csv?token=AOLJKYUTFIE2W5QLUZZA5KK7MO6CO')
+pumping_ob = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\pumping\SB_Potent_Surface_points.csv')
 
 # Trim the dataframe to the model domain
 pumping_ob = pumping_ob.loc[pumping_ob['lambx']<nex]
