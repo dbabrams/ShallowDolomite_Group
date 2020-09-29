@@ -225,6 +225,21 @@ kl10 = kl9-kl9+kb
 khlayers = [kl1,kl2,kl3,kl4,kl5,kl6,kl7,kl8,kl9,kl10]
 kvlayers=np.divide(khlayers,10.)
 
+# Connect river cells to the dolomite by setting high conductivity for cells between rivers and bedrock
+# For any row/column location with a river in the top layer, set high conductivity for the cells below, excluding the bedrock
+for row in np.arange(0,nrow,1): #for all rows...
+    for col in np.arange(0,ncol,1): #for all columns..
+        for value in dfriv.index: 
+            if dfriv.loc[value,'row'] == row and dfriv.loc[value,'col'] == col: #if that row/column location corresponds to a river cell, set k = kc for layers 2-9
+                kl2[row][col] = kc
+                kl3[row][col] = kc
+                kl4[row][col] = kc
+                kl5[row][col] = kc
+                kl6[row][col] = kc
+                kl7[row][col] = kc
+                kl8[row][col] = kc
+                kl9[row][col] = kc
+
 #--------------------------------------------------
 # Define wells
 
