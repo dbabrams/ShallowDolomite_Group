@@ -958,6 +958,45 @@ plt.show()
 print(pumping_ob.error.min())
 print(pumping_ob.error.max())
 
+#%% PEST
+
+#--------------------------------------------------
+'''Define a parameter to modify'''
+
+# Create a multiplier parameter for recharge
+mfpackage = 'rch'
+partype = 'rech'
+parname = 'RECH_MULT'
+
+# The span variable defines how the parameter spans the package
+# For a recharge multiplier, span['idx'] must be None
+idx = None
+span = {'kpers': [0], 'idx': idx}
+
+# These parameters have no effect yet, but may in the future
+startvalue = None
+lbound = None
+ubound = None
+transform = None
+
+# "flopy.pest.Params" class to define parameters that will be estimated using PEST
+p = flopy.pest.Params(mfpackage, partype, parname, startvalue,
+                      lbound, ubound, span)
+plist = []
+plist.append(p)
+
+#--------------------------------------------------
+'''Write and display a PEST template file'''
+
+# Write the template file
+tw = flopy.pest.TemplateWriter(m, plist)
+tw.write_template()
+
+# Print the results
+lines = open(r'D:\Documents\GitHub\my_model.rch.tpl', 'r').readlines()
+for l in lines:
+    print(l.strip())
+
 #%% ZONE BUDGET
 
 #--------------------------------------------------
