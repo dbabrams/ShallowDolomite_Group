@@ -253,7 +253,7 @@ dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_
 #print(dfwel)
 
 #--------------------------------------------------
-# Define Drains
+# Define drains
 
 # Add cells to the drain package wherever low-k material is at land surface.  These are cells in layer 1 with hydraulic conductivity k = kf.
 
