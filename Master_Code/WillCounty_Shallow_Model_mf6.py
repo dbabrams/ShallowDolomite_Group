@@ -15,7 +15,7 @@ os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
 import sys
 import platform
 import numpy as np
-import matplotlib as mpl
+import matplotlib as mp
 import matplotlib.pyplot as plt
 import flopy #import FloPy to develop, run, and analyze the model
 from flopy.utils import Raster #raster toolbox built into FloPy
@@ -26,10 +26,10 @@ import numpy as np
 #%% MODEL SETUP
 
 #--------------------------------------------------
-# Set up a workspace for the model
+'''Set up a workspace for the model'''
 
 # Model input files and output files will reside in the model workspace
-model_name = 'WillCounty_Shallow_Model_mf6'
+model_name = 'Will_Cty_Shallow'
 dir_path = r'D:\Documents\GitHub'
 workspace = os.path.join(dir_path, model_name)
 if not os.path.exists(workspace):
@@ -41,13 +41,14 @@ if not os.path.exists(data_path):
 assert os.path.isdir(data_path)
 
 #--------------------------------------------------
-# Create a simulation
+'''Create a simulation'''
 
-sim = flopy.mf6.MFSimulation(sim_name=model_name, version='mf6', exe_name='mf6', 
+sim = flopy.mf6.MFSimulation(sim_name=model_name, version='mf6', 
+                             exe_name=r'D:\Documents\ISWS\downloads from USGS\mf6.1.1\bin\mf6.exe',
                              sim_ws=workspace)
 
 #--------------------------------------------------
-# Create the MODFLOW model object
+'''Create the MODFLOW model object'''
 
 #The model object is named "gwf"
 gwf = flopy.mf6.ModflowGwf(sim, modelname=model_name,
@@ -65,7 +66,7 @@ ims = flopy.mf6.ModflowIms(sim, pname='ims', print_option='SUMMARY',
 sim.register_ims_package(ims, [gwf.name])
 
 #--------------------------------------------------
-# Define model domain in lat/long coordinates
+'''Define model domain in lat/long coordinates'''
 
 # Coordinates for each corner of the domain
 sw_lat = 41.174519     #41.174519 #41.356272 #41.41 #southwest latitude
@@ -98,7 +99,7 @@ nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
 swx, swy = round(swx/0.3048,-4), round(swy/0.3048,-4)
 
 #--------------------------------------------------
-# Define spatial and temporal discretization
+'''Define spatial and temporal discretization'''
 
 # Assign discretization variables
 Lx = nex-swx # Width of the model domain in feet
@@ -114,7 +115,7 @@ tdis_rc = [(1.0, 1, 1.0)]   #input for tdis package: [period length, # of time s
                             #for steady state, a time step of 1 is recommended; period length does not matter
 
 #--------------------------------------------------
-# Define river elevations
+'''Define river elevations'''
 
 # Import river stage, lambert x, lambert y from river Excel file
 dfriv = pd.read_csv(os.path.join(dir_path,'ShallowDolomite_Group','large_files','rivers_625.csv'))
@@ -143,7 +144,7 @@ dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lam
 dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 
 #--------------------------------------------------
-# Define top and bottom elevations
+'''Define top and bottom elevations'''
 
 # Now load the raster using FloPy's built in Raster toolbox
 illinoisdem = Raster.load(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\landsurface_el.tif')
@@ -202,7 +203,7 @@ lay10bot = lay9bot-bothick
 botgrids = [lay1bot,lay2bot,lay3bot,lay4bot,lay5bot,lay6bot,lay7bot,lay8bot,lay9bot,lay10bot]
 
 #--------------------------------------------------
-# Assign hydraulic conductivity
+'''Assign hydraulic conductivity'''
 
 # Assign hydraulic conductivity in ft/day
 kc = 220 #predominantly coarse
@@ -242,7 +243,7 @@ khlayers = [kl1,kl2,kl3,kl4,kl5,kl6,kl7,kl8,kl9,kl10]
 kvlayers=np.divide(khlayers,10.)
 
 #--------------------------------------------------
-# Spatial and temporal discretization packages
+'''Spatial and temporal discretization packages'''
 
 # Create the discretization package
 dis = flopy.mf6.ModflowGwfdis(model=gwf, pname='dis', nlay=nlay, nrow=nrow, ncol=ncol, 
@@ -256,21 +257,21 @@ tdis = flopy.mf6.ModflowTdis(sim, pname='tdis', time_units='DAYS',
                              nper=nper, perioddata=tdis_rc)
 
 #--------------------------------------------------
-# Initial conditions
+'''Initial conditions'''
 
 ic = flopy.mf6.ModflowGwfic(gwf, pname='ic', strt=50.0,
                             filename='{}.ic'.format(model_name))
 
 #--------------------------------------------------
-# Node property flow
+'''Node property flow'''
 
-npf = flopy.mf6.ModflowGwfnpf(gwf, pname='npf', save_flows=True, 
-                              icelltype=[1,0,0], 
-                              k=[5.0, 0.1, 4.0],
-                              k33=[0.5, 0.005, 0.1])
+npf = flopy.mf6.ModflowGwfnpf(gwf, pname='npf', icelltype=1, k=khlayers,
+                              k33=kvlayers, save_flows=True)
+
+# When k_horizontal != k_vertical, k=k_horizontal and k33=k_vertical
 
 #--------------------------------------------------
-# Output control
+'''Output control'''
 
 oc = flopy.mf6.ModflowGwfoc(gwf, pname='oc', budget_filerecord='{}.cbb'.format(model_name),
                             head_filerecord='{}.hds'.format(model_name),
@@ -281,7 +282,7 @@ oc = flopy.mf6.ModflowGwfoc(gwf, pname='oc', budget_filerecord='{}.cbb'.format(m
                                          #('BUDGET', 'LAST')])
 
 #--------------------------------------------------
-# Storage package
+'''Storage package'''
 
 sy = flopy.mf6.ModflowGwfsto.sy.empty(gwf, layered=True)
 for layer in range(0,10):
@@ -295,7 +296,7 @@ sto = flopy.mf6.ModflowGwfsto(gwf, pname='sto', save_flows=True, iconvert=1,
 #%% BOUNDARY CONDITIONS
 
 #--------------------------------------------------
-# Define wells
+'''Define wells'''
 
 # Import well data from .csv file
 dfwel = pd.read_csv(os.path.join(dir_path,'ShallowDolomite_Group','pumping','2002_pumping_V2.csv'))
@@ -321,7 +322,7 @@ dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_
 #print(dfwel)
 
 #--------------------------------------------------
-# Put the well data into a form that can be added into the well package
+'''Put the well data into a form that can be added into the well package'''
 
 maxbound = 1000000 #maximum number of well cells that will be specified in a given stress period
 
@@ -337,7 +338,7 @@ wel = flopy.mf6.ModflowGwfwel(gwf, pname='wel', print_input=True, print_flows=Tr
                               boundnames=False, save_flows=True)
 
 #--------------------------------------------------
-# Define drains
+'''Define drains'''
 
 # Add cells to the drain package wherever low-k material is at land surface.  These are cells in layer 1 with hydraulic conductivity k = kf.
 
@@ -369,7 +370,37 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 #print(dfdrn)
 
 #--------------------------------------------------
-# Put the drain data into a form that can be added into the drain package
+'''Delete any drain cells that coincide with river cells'''
+
+# This code block ensures that no river cells are accidentally included in the drain package
+
+# Create an array from the values in the drain dataframe
+# In other words, create "ardrn" from "dfdrn"
+ardrn = dfdrn.values
+ardrn = ardrn.tolist() #convert the drain array from an array to a list
+
+# Print the initial length of the drain array
+ardrn_initial=len(ardrn)
+print('The initial length of the drain array is',ardrn_initial)
+
+# Search through the river dataframe and the drain array for matches
+# If any river cells are included in the drain array, the following loops will remove them
+for i in range(len(dfriv)-1):
+  for j in range(len(ardrn)-1):
+    if dfriv.loc[i,'row']==np.float64(ardrn[j][1]) and dfriv.loc[i,'col']==np.float64(ardrn[j][2]):
+      ardrn.remove(ardrn[j])
+
+ardrn_final=len(ardrn)
+
+# Print the final length of the drain array
+print('The final length of the drain array is',ardrn_final)
+print(ardrn_initial-ardrn_final,'items were removed')
+
+# Convert the drain array back to a dataframe (ardrn -> dfdrn)
+dfdrn = pd.DataFrame(ardrn, columns = ['lay','row','col','elevation','cond'])
+
+#--------------------------------------------------
+'''Put the drain data into a form that can be added into the drain package'''
 
 maxbound = 1000000 #maximum number of drain cells that will be specified in a given stress period
 
@@ -385,5 +416,223 @@ drn = flopy.mf6.ModflowGwfdrn(gwf, pname='drn', print_input=True, print_flows=Tr
                               boundnames=False, save_flows=True)
 
 #--------------------------------------------------
-# Define recharge
+'''Define recharge'''
 
+# Assign recharge to the model
+# Units=ft/d
+
+'''
+# Original values
+rch1=0.0014 #fine
+rch2=0.0024 #coarse
+'''
+
+rch1=0.0007 #fine
+rch2=0.0012 #coarse
+
+# Create a recharge array based on values in kl1 (the top layer)
+# Cells where kl1 = kf are assigned recharge = rch1
+# All other cells (where kl1 = kc) are assigned recharge = rch2
+recharge=np.where(kl1<=kf, rch1, rch2) 
+
+#--------------------------------------------------
+'''Put the recharge data into a form that can be added into the recharge package'''
+
+maxbound = 1000000 #maximum number of drain cells that will be specified in a given stress period
+
+# Create an array of stress period data
+
+rch_array={}
+rch_array[0] = recharge
+#rch = flopy.mf6.ModflowGwfrch(gwf, pname='rch', fixed_cell=True, print_input=True,
+                              #maxbound=maxbound, stress_period_data=rch_array)
+
+rch = flopy.mf6.ModflowGwfrcha(gwf, pname='rch', fixed_cell=True, print_input=True,
+                               recharge=recharge)
+
+#%% Plot model inputs (boundary conditions, elevations)
+
+#--------------------------------------------------
+''''Plot grid and boundary conditions'''
+
+'''
+plt.figure(figsize=(10,10)) #create 10 x 10 figure
+modelmap = flopy.plot.PlotMapView(model=gwf, layer=0)
+#grid = modelmap.plot_grid()
+ib = modelmap.plot_ibound(ibound=ibound)
+rvr = modelmap.plot_bc('RIV')
+#add labels and legend
+plt.xlabel('Lx (ft)',fontsize = 14)
+plt.ylabel('Ly (ft)',fontsize = 14)
+plt.title('Ibound', fontsize = 15, fontweight = 'bold')
+plt.legend(handles=[mp.patches.Patch(color='blue',label='Const. Head',ec='black'),
+                   mp.patches.Patch(color='white',label='Active Cell',ec='black'),
+                   mp.patches.Patch(color='black',label='Inactive Cell',ec='black'),
+                   mp.patches.Patch(color='green',label='River',ec='green')],
+                   bbox_to_anchor=(1.5,1.0))
+plt.show()
+'''
+
+#--------------------------------------------------
+'''Plot hydraulic conductivity'''
+
+'''
+plt.figure(figsize=(10,10)) #create 10 x 10 figure
+modelmap = flopy.plot.map.PlotMapView(model=gwf, layer=0) #use plotmapview to attach plot to model
+#contour_levels = np.linspace(400,800,41)
+#topelevations = modelmap.contour_array(topgrid, levels = contour_levels) #create head contours
+#plt.clabel(topelevations, inline=True,fontsize=12,fmt='%1.0f')
+
+# Create colormap of named colors
+colors = ["saddlebrown","lightgoldenrodyellow"]
+cmap = mp.colors.LinearSegmentedColormap.from_list("", colors)
+norm = mp.colors.LogNorm(vmin=kf,vmax=kc)
+modelmap.plot_array(khlayers[0],norm = norm,cmap=cmap)
+rvr = modelmap.plot_bc(ftype='RIV')
+ib = modelmap.plot_ibound()
+
+# Display parameters
+plt.xlabel('Lx (ft)',fontsize = 14)
+plt.ylabel('Ly (ft)',fontsize = 14)
+plt.title('Top Elevation (ft AMSL); Hydraulic Conductivity', fontsize = 15, fontweight = 'bold')
+
+# Create a legend for the hydraulic conductivity
+plt.legend(handles=[mp.patches.Patch(color='green', label='rivers'),
+                    mp.patches.Patch(color='saddlebrown', label='kf=0.3 ft/d'),
+                    mp.patches.Patch(color='lightgoldenrodyellow', label='kc=280 ft/d') ],
+           bbox_to_anchor=(1.7,0.8))
+plt.show()
+'''
+
+#--------------------------------------------------
+'''Plot recharge'''
+
+'''
+fig=plt.figure(figsize=(10,10)) #create 10 x 10 figure
+modelmap = flopy.plot.map.PlotMapView(model=gwf, layer=0) #use plotmapview to attach plot to model
+#contour_levels = np.linspace(400,800,41)
+#topelevations = modelmap.contour_array(topgrid, levels = contour_levels) #create head contours
+#plt.clabel(topelevations, inline=True,fontsize=12,fmt='%1.0f')
+
+# Create colormap of named colors
+colors = ["saddlebrown","lightgoldenrodyellow"]
+cmap = mp.colors.LinearSegmentedColormap.from_list("", colors)
+norm = mp.colors.LogNorm(vmin=rch1,vmax=rch2)
+pcm=modelmap.plot_array(recharge, norm = norm,cmap=cmap)
+rvr = modelmap.plot_bc(ftype='RIV')
+ib = modelmap.plot_ibound()
+#display parameters
+plt.xlabel('Lx (ft)',fontsize = 14)
+plt.ylabel('Ly (ft)',fontsize = 14)
+plt.title('Top Elevation (ft AMSL); Recharge Zones', fontsize = 15, fontweight = 'bold')
+
+# Create a legend for the recharge zones 
+plt.legend(handles=[
+    mp.patches.Patch(color='green', label='rivers'),
+    mp.patches.Patch(color='saddlebrown', label='rch1=0.0014 ft/d'),
+    mp.patches.Patch(color='lightgoldenrodyellow', label='rch2=0.0024 ft/d') ], bbox_to_anchor=(1.7,0.8))
+plt.show()
+'''
+
+#--------------------------------------------------
+'''Plot transects'''
+
+'''
+plt.figure(figsize=(10,10)) #create 10 x 10 figure
+modelxsect = flopy.plot.PlotCrossSection(model = gwf, line={"row":22}) #use plotmapview to attach plot to model. row indicates west to east 
+#modelxsect = flopy.plot.PlotCrossSection(model = m, line={"column":15}) #plots north-south transect
+
+# Create colormap of named colors
+colors = ["saddlebrown","gray","lightgoldenrodyellow"]
+cmap = mp.colors.LinearSegmentedColormap.from_list("", colors)
+norm = mp.colors.LogNorm(vmin=kf,vmax=kc)
+#modelxsect.plot_grid()
+khlaynp = np.array(khlayers)
+lines = modelxsect.plot_array(khlaynp,norm=norm, cmap=cmap)
+rvr = modelxsect.plot_bc(ftype='RIV')
+modelxsect.plot_ibound()
+plt.show()
+'''
+
+#--------------------------------------------------
+'''Plot Transmissivity'''
+
+'''
+# Horizontal T = sum(k*b), for each layer.  k is the hydraulic conductivity, and b is the layer thickness
+Thz=sum([k for k in khlayers])*laythick-kl10*laythick+kl10*bothick
+#----------------------------------------------------------------------------
+plt.figure(figsize=(10,10)) #create 10 x 10 figure
+modelmap = flopy.plot.map.PlotMapView(model=gwf, layer=0) #use plotmapview to attach plot to model
+
+# Create colormap of named colors
+colors = ["darkred","red","pink","white","lightskyblue","blue","indigo"]
+cmap = mp.colors.LinearSegmentedColormap.from_list("", colors)
+norm = mp.colors.LogNorm(vmin=np.amin(Thz),vmax=np.amax(Thz))
+Tmap=modelmap.plot_array(Thz,norm = norm,cmap=cmap)
+rvr = modelmap.plot_bc(ftype='RIV')
+#display parameters
+plt.xlabel('Lx (ft)',fontsize = 14)
+plt.ylabel('Ly (ft)',fontsize = 14)
+plt.title('Transmissivity of Aquifer in Model Domain', fontsize = 15, fontweight = 'bold')
+cbar=plt.colorbar(Tmap,ticks=[np.amin(Thz),np.amax(Thz)], label='Transmissivity (sq.ft/day)')
+cbar.set_ticklabels([int(round(np.amin(Thz),0)),int(round(np.amax(Thz),0))])
+plt.legend(handles=[mp.patches.Patch(color='green', label='rivers')], bbox_to_anchor=(1.7,0.8))
+plt.show()
+'''
+
+#%% RUN THE MODEL
+
+# Change where to save simulation
+#sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+# Write simulation to new location
+sim.write_simulation()
+
+# Print a list of the files that were created in the model workspace
+print(os.listdir(workspace))
+
+# Run the simulation
+success, buff = sim.run_simulation()
+print('\nSuccess is: ', success)
+
+#%% MODEL RESULTS
+
+#--------------------------------------------------
+'''Post-process head results'''
+
+'''
+# Read the binary head file and plot the results
+# We can use the existing Flopy HeadFile class because
+# the format of the headfile for MODFLOW 6 is the same
+# as for previous MODFLOW verions
+headfile = '{}.hds'.format(model_name)
+fname = os.path.join(workspace, headfile)
+hds = flopy.utils.binaryfile.HeadFile(fname)
+h = hds.get_data()
+
+# We can also use the Flopy PlotMapView capabilities for MODFLOW 6
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(1, 1, 1, aspect='equal')
+
+# Next we create an instance of the ModelMap class
+modelmap = flopy.plot.PlotMapView(model=gwf, ax=ax)
+
+# Then we can use the plot_grid() method to draw the grid
+# The return value for this function is a matplotlib LineCollection object,
+# which could be manipulated (or used) later if necessary.
+#quadmesh = modelmap.plot_ibound(ibound=ibd)
+linecollection = modelmap.plot_grid()
+contours = modelmap.contour_array(h[0])
+'''
+
+#--------------------------------------------------
+'''Post-process flow results'''
+
+'''
+# Read the binary grid file
+fname = os.path.join(workspace, '{}.dis.grb'.format(model_name))
+bgf = flopy.utils.mfgrdfile.MfGrdFile(fname)
+
+# Data read from the binary grid file is stored in a dictionary
+bgf._datadict
+'''
