@@ -18,7 +18,7 @@ To-Do:
 
 #%%
 import os
-os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
+os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\gdal'
 
 #%% IMPORT PACKAGES
 
@@ -101,7 +101,7 @@ steady = [True] #specify if stress period is transient or steady-state
 # Define river elevations
 
 # Import river stage, lambert x, lambert y from river Excel file
-dfriv = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\rivers_625.csv')
+dfriv = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\rivers_625.csv')
 
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
@@ -130,8 +130,8 @@ dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 # Define top and bottom elevations
 
 # Now load the raster using FloPy's built in Raster toolbox
-illinoisdem = Raster.load(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\landsurface_el.tif')
-bedrock = Raster.load(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\bedrock_el.tif')
+illinoisdem = Raster.load(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\landsurface_el.tif')
+bedrock = Raster.load(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\bedrock_el.tif')
 
 # Crop the DEM to the model domain
 illinoisdem.crop([(swx,swy),(swx,ney),(nex,ney),(nex,swy)])
@@ -211,15 +211,15 @@ def kloader(rastername, kc, kf, threshold):
   percentgrid[percentgrid<threshold] = kf #assign fine k value
   return percentgrid
 
-kl1 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl1.tif',kc,kf,threshold)
-kl2 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl2.tif',kc,kf,threshold)
-kl3 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl3.tif',kc,kf,threshold)
-kl4 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl4.tif',kc,kf,threshold)
-kl5 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl5.tif',kc,kf,threshold)
-kl6 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl6.tif',kc,kf,threshold)
-kl7 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl7.tif',kc,kf,threshold)
-kl8 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl8.tif',kc,kf,threshold)
-kl9 = kloader(r'D:\Documents\GitHub\ShallowDolomite_Group\large_files\percentl9.tif',kc,kf,threshold)
+kl1 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl1.tif',kc,kf,threshold)
+kl2 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl2.tif',kc,kf,threshold)
+kl3 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl3.tif',kc,kf,threshold)
+kl4 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl4.tif',kc,kf,threshold)
+kl5 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl5.tif',kc,kf,threshold)
+kl6 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl6.tif',kc,kf,threshold)
+kl7 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl7.tif',kc,kf,threshold)
+kl8 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl8.tif',kc,kf,threshold)
+kl9 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl9.tif',kc,kf,threshold)
 kl10 = kl9-kl9+kb
 
 khlayers = [kl1,kl2,kl3,kl4,kl5,kl6,kl7,kl8,kl9,kl10]
@@ -229,7 +229,7 @@ kvlayers=np.divide(khlayers,10.)
 # Define wells
 
 # Import well data from .csv file
-dfwel = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\pumping\2002_pumping_V2.csv')
+dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\2002_pumping_V2.csv')
 dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
 # Trim dataframe with well information to the model domain
@@ -289,8 +289,8 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 
 # Create a MODFLOW model object and run with MODFLOW 2005.
 modelname = 'my_model' # name the model
-exe_dir = r'D:\Documents\GitHub\ShallowDolomite_Group\executables\mf2005.exe' #define the file path for the mf2005 executable
-model_dir = r'D:\Documents\GitHub' #define the file path for any model files
+exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
+model_dir =  #define the file path for any model files
 m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = exe_dir, model_ws = model_dir) #create model object m 
 
 #--------------------------------------------------
