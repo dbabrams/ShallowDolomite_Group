@@ -10,11 +10,10 @@ Created on Thu Sep  3 14:59:49 2020
 '''
 To-Do:
 
-X Download TIFs so we don't need to import them from Google Drive
-X Download MF2005, MFNWT, and MT3DMS executable files
-- Add in code for RMS error
-- Ignore deprecation warnings produced when creating the error map
-- Remove sections of code for uploading files to Colab
+- 
+- 
+- 
+
 '''
 
 
@@ -31,6 +30,7 @@ from flopy.utils import Raster #plot rasters with FloPy
 import matplotlib as mp
 import pandas as pd
 import pyproj #change between WGS84 and Illimap coordinates
+from pyproj import Transformer
 import rasterio  #import rasters
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -43,19 +43,6 @@ from pykrige.uk import UniversalKriging
 import pylab #used as a plotting library for spatial data, make contours
 from metpy.plots import USCOUNTIES
 import math
-
-#%% IMPORT FILES FROM GOOGLE DRIVE
-
-#--------------------------------------------------
-# DEM
-
-# First import the land surface .tif from Google Drive
-
-
-#--------------------------------------------------
-# Rivers
-
-# First import the Excel file from Google Drive
 
 #%% MODEL SETUP
 #--------------------------------------------------
