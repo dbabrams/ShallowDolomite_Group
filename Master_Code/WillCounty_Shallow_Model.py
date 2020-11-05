@@ -42,6 +42,7 @@ import cartopy.feature as cf #import features
 from pykrige.uk import UniversalKriging
 import pylab #used as a plotting library for spatial data, make contours
 from metpy.plots import USCOUNTIES
+import math
 
 #%% IMPORT FILES FROM GOOGLE DRIVE
 
