@@ -290,7 +290,7 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 # Create a MODFLOW model object and run with MODFLOW 2005.
 modelname = 'my_model' # name the model
 exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
-model_dir =  #define the file path for any model files
+model_dir = os.path.dirname(os.path.dirname(os.getcwd())) #define the file path for any model files
 m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = exe_dir, model_ws = model_dir) #create model object m 
 
 #--------------------------------------------------
@@ -559,7 +559,7 @@ if not success:
 
 #%% PLOT OUTPUT DATA
 
-os.chdir(r'D:\Documents\GitHub')
+os.chdir(model_dir)
 
 #--------------------------------------------------
 '''Extract binary data from head and flow files'''
@@ -628,7 +628,7 @@ plt.show()
 
 # Import the observation well data as a dataframe
 # "SB_Potent_Surface_points.csv"
-pumping_ob = pd.read_csv(r'D:\Documents\GitHub\ShallowDolomite_Group\pumping\SB_Potent_Surface_points.csv')
+pumping_ob = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\SB_Potent_Surface_points.csv')
 
 # Trim the dataframe to the model domain
 pumping_ob = pumping_ob.loc[pumping_ob['lambx']<nex]
@@ -993,9 +993,9 @@ tw = flopy.pest.TemplateWriter(m, plist)
 tw.write_template()
 
 # Print the results
-lines = open(r'D:\Documents\GitHub\my_model.rch.tpl', 'r').readlines()
-for l in lines:
-    print(l.strip())
+#lines = open('my_model.rch.tpl', 'r').readlines()
+#for l in lines:
+    #print(l.strip())
 
 #%% ZONE BUDGET
 
@@ -1011,7 +1011,7 @@ cbc_f = flopy.utils.binaryfile.CellBudgetFile(modelname+'.cbc')
 
 # Import a zone input file
 # The zone input file is a text file that assigns a zone to each cell in the model
-zon = flopy.utils.zonbud.read_zbarray(r'D:\Documents\GitHub\ShallowDolomite_Group\zonebudget\zone_input_file.txt') #read_zbarray is used to read in the zone input file as an array
+zon = flopy.utils.zonbud.read_zbarray(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\zonebudget\zone_input_file.txt') #read_zbarray is used to read in the zone input file as an array
 
 
 # Create a ZoneBudget object and get the budget record array
