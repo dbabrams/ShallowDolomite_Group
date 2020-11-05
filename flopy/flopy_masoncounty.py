@@ -51,6 +51,7 @@ D = {'proj': 'lcc', # define projection as Lambert Conformal Conic
         'y_0': 0} # starting y coordinate}
 
 prj = pyproj.Proj(D) # Create a projection object that will be used to convert lat/long to illimap
+wgs84 = pyproj.Proj("epsg:4326")
 
 #Define the northeastern coordintes, round to nearest 10,000
 nex, ney = prj(ne_long, ne_lat) # this will return meters

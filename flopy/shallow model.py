@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep  3 14:59:49 2020
+Created on Thu Sep 10 13:21:10 2020
 
+@author: Pu
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep  3 14:59:49 2020
 @author: antho
 """
 
@@ -9,7 +15,6 @@ Created on Thu Sep  3 14:59:49 2020
 
 '''
 To-Do:
-
 X Download TIFs so we don't need to import them from Google Drive
 X Download MF2005, MFNWT, and MT3DMS executable files
 - Add in code for RMS error
@@ -20,9 +25,7 @@ X Download MF2005, MFNWT, and MT3DMS executable files
 
 #%%
 import os
-os.environ['GDAL_DATA'] = r'C:\Users\Pu\anaconda3\Library\share\gdal'
-print(os.getcwd())
-print(os.listdir())
+os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
 
 #%% IMPORT PACKAGES
 
@@ -41,9 +44,9 @@ import numpy as np
 import cartopy
 import cartopy.crs as ccrs #import projections
 import cartopy.feature as cf #import features
-from pykrige.uk import UniversalKriging
+#from pykrige.uk import UniversalKriging
 import pylab #used as a plotting library for spatial data, make contours
-from metpy.plots import USCOUNTIES
+# from metpy.plots import USCOUNTIES
 
 #%% IMPORT FILES FROM GOOGLE DRIVE
 
@@ -51,16 +54,53 @@ from metpy.plots import USCOUNTIES
 # DEM
 
 # First import the land surface .tif from Google Drive
+downloaded = drive.CreateFile({'id':"1389l8sgQ8-tsmIZuZosaqvbqpHY40n6l"}) # ft above msl
+downloaded.GetContentFile('landsurface_el.tif')
 
+# First import the bedrock elevation .tif from Google Drive
+downloaded = drive.CreateFile({'id':"1EZgZDjjILzvRzvY9nf0Qp0NHmspRq4kP"})   
+downloaded.GetContentFile('bedrock_el.tif')
+
+# Read in percent thickness of coarse grain for each model layer
+downloaded = drive.CreateFile({'id':"18Kw3O6qCzIJ2L6KrVnRPIhea_F8VwyWn"})   
+downloaded.GetContentFile('percentl1.tif')
+
+downloaded = drive.CreateFile({'id':"1oZinFPKrGY-FXoE7Zu0okFpAAOe_bwau"})   
+downloaded.GetContentFile('percentl2.tif')
+
+downloaded = drive.CreateFile({'id':"1FqVEr4m_ElUyEZeyfnCMwVGDfUqavJZH"})   
+downloaded.GetContentFile('percentl3.tif')
+
+downloaded = drive.CreateFile({'id':"1KiHS9TLSP1GAVTjaaJZS4BAwF6gnUeDu"})   
+downloaded.GetContentFile('percentl4.tif')
+
+downloaded = drive.CreateFile({'id':"1Z-9EyaAK1NKnRHAlnyGYkI3suvBFC2I6"})   
+downloaded.GetContentFile('percentl5.tif')
+
+downloaded = drive.CreateFile({'id':"1pcB9aJpJGfkXOKz10rhs6MpWkQL1_dqr"})   
+downloaded.GetContentFile('percentl6.tif')
+
+downloaded = drive.CreateFile({'id':"1Fnh0HIKbUj7pEtlsUKR_Sr7WwfYzWul5"})   
+downloaded.GetContentFile('percentl7.tif')
+
+downloaded = drive.CreateFile({'id':"106JacgpwSA3wVAGcBIzGdc8rDVUB6dh7"})   
+downloaded.GetContentFile('percentl8.tif')
+
+downloaded = drive.CreateFile({'id':"1WJjhVJ_KSBhZDrgzY3YteNjxaz5nxBid"})   
+downloaded.GetContentFile('percentl9.tif')
 
 #--------------------------------------------------
 # Rivers
 
 # First import the Excel file from Google Drive
+downloaded = drive.CreateFile({'id':"1JsAiGG4RvcfYrQtfgXRW9ZVfAkQ1yRVu"})
+downloaded.GetContentFile('rivers_625.csv')
 
 #%% MODEL SETUP
+
 #--------------------------------------------------
 # Define model domain in lat/long coordinates
+
 # Coordinates for each corner of the domain
 sw_lat = 41.174519     #41.174519 #41.356272 #41.41 #southwest latitude
 sw_long = -88.408339     #-88.408339 #-88.311217 #-88.24 #southwest longitude
@@ -92,7 +132,6 @@ swx, swy = pyproj.transform(wgs84,illimap,sw_lat,sw_long)
 nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
 swx, swy = round(swx/0.3048,-4), round(swy/0.3048,-4)
 
-#%%
 #--------------------------------------------------
 # Define spatial and temporal discretization
 
@@ -112,7 +151,8 @@ steady = [True] #specify if stress period is transient or steady-state
 # Define river elevations
 
 # Import river stage, lambert x, lambert y from river Excel file
-dfriv = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\rivers_625.csv')
+dfriv = pd.read_csv('rivers_625.csv')
+
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
 dfriv = dfriv.loc[dfriv['lamy']<ney]
@@ -137,6 +177,7 @@ dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lam
 dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 
 # Import river stage, lambert x, lambert y from river Excel file
+dfriv = pd.read_csv('rivers_625.csv')
 
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
@@ -649,9 +690,7 @@ plt.show()
 #%% CALIBRATION
 
 '''
-
 "Can it wait for a bit?  I'm in the middle of some calibrations..."
-
 '''
 
 #--------------------------------------------------
@@ -1013,11 +1052,3 @@ zb.get_budget()
 
 # Note:  The zone input file only needs to be uploaded once.  Check the "Files" tab on the left to see if it has already been uploaded.
 # If the zone input file has already been uploaded, you can click "Cancel upload" in the output window below.
-
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
