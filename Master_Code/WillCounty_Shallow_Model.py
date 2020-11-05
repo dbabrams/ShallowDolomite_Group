@@ -27,6 +27,7 @@ os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Model
 
 import flopy #import FloPy to develop, run, and analyze the model
 from flopy.utils import Raster #plot rasters with FloPy
+import math
 import matplotlib as mp
 import pandas as pd
 import pyproj #change between WGS84 and Illimap coordinates
@@ -42,7 +43,6 @@ import cartopy.feature as cf #import features
 from pykrige.uk import UniversalKriging
 import pylab #used as a plotting library for spatial data, make contours
 from metpy.plots import USCOUNTIES
-import math
 
 #%% MODEL SETUP
 #--------------------------------------------------
@@ -64,15 +64,14 @@ illimap = {'proj': 'lcc', # code for Lambert Conformal Conic
      'x_0': 2999994*0.3048,
      'y_0': 0}
 
-prj = pyproj.Proj(illimap) #define "prj" as the illimap coordinate system
-
-wgs84 = pyproj.Proj("epsg:4326") #define "wgs84" as the EPSG 4326 / WGS84 coordinate system
+# Define the transformation from lat/long (WGS84, or EPSG 4326) to Lambert x/y (Illimap)
+transformer = Transformer.from_crs("epsg:4326", illimap)
 
 # Note that WGS84 and EPSG 4326 are equivalent
 
 # Transform the coordinates of the NE and SW corners from WGS84 (lat and long) to Illimap (x and y)
-nex, ney = pyproj.transform(wgs84,illimap,ne_lat,ne_long) 
-swx, swy = pyproj.transform(wgs84,illimap,sw_lat,sw_long)
+nex, ney = transformer.transform(ne_lat, ne_long)
+swx, swy = transformer.transform(sw_lat, sw_long)
 
 # Convert nex, ney, swx, swy from m to ft and round
 nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
@@ -290,8 +289,6 @@ exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\
 model_dir = os.path.dirname(os.path.dirname(os.getcwd())) #define the model workspace as the GitHub folder
 m = flopy.modflow.Modflow(modelname, version='mf2005', exe_name=exe_dir, #create model object m
                           model_ws=model_dir)
-
-flopy.modflow.Modflow()
 
 #--------------------------------------------------
 # Append the discretization package to the model object
