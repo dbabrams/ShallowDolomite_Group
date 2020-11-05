@@ -77,7 +77,6 @@ swx, swy = transformer.transform(sw_lat, sw_long)
 nex, ney = round(nex/0.3048,-4), round(ney/0.3048,-4)
 swx, swy = round(swx/0.3048,-4), round(swy/0.3048,-4)
 
-#%%
 #--------------------------------------------------
 # Define spatial and temporal discretization
 
