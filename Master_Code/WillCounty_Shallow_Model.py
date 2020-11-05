@@ -21,8 +21,7 @@ X Download MF2005, MFNWT, and MT3DMS executable files
 #%%
 import os
 os.environ['GDAL_DATA'] = r'C:\Users\Pu\anaconda3\Library\share\gdal'
-print(os.getcwd())
-print(os.listdir())
+
 
 #%% IMPORT PACKAGES
 
@@ -113,30 +112,6 @@ steady = [True] #specify if stress period is transient or steady-state
 
 # Import river stage, lambert x, lambert y from river Excel file
 dfriv = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\rivers_625.csv')
-# Trim dataframe with river information to the model domain
-dfriv = dfriv.loc[dfriv['lamx']<nex]
-dfriv = dfriv.loc[dfriv['lamy']<ney]
-dfriv = dfriv.loc[dfriv['lamx']>swx]
-dfriv = dfriv.loc[dfriv['lamy']>swy]
-
-# Assign all rivers to the upper layer
-dfriv['lay'] = 0 #this actually assigns it to layer 1
-# Convert lamx to column and lamy to row
-dfriv['row'] = np.trunc((ney-dfriv['lamy'])/dy)
-dfriv['col'] = np.trunc((dfriv['lamx']-swx)/dx)
-# Define the river stage
-dfriv['stage'] = dfriv['rvr_stg']
-# Define the conductance
-dfriv['cond'] = 90000. #ft^2/d (this value was adjusted during calibration)
-# Define the river bottom
-dfriv['bot'] = dfriv['stage']-3
-# Drop unneeded columns
-dfriv = dfriv.drop(['STR_ORD_MI','STR_ORD_MA','SUM_LENGTH','rvr_stg','lamx','lamy'],axis=1)
-
-# Group duplicate rivers within a cell
-dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
-
-# Import river stage, lambert x, lambert y from river Excel file
 
 # Trim dataframe with river information to the model domain
 dfriv = dfriv.loc[dfriv['lamx']<nex]
@@ -165,8 +140,8 @@ dfriv = dfriv.groupby(['lay','row','col'],as_index=False).mean()
 # Define top and bottom elevations
 
 # Now load the raster using FloPy's built in Raster toolbox
-illinoisdem = Raster.load("landsurface_el.tif")
-bedrock = Raster.load("bedrock_el.tif")
+illinoisdem = Raster.load(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\landsurface_el.tif')
+bedrock = Raster.load(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\bedrock_el.tif')
 
 # Crop the DEM to the model domain
 illinoisdem.crop([(swx,swy),(swx,ney),(nex,ney),(nex,swy)])
@@ -246,15 +221,15 @@ def kloader(rastername, kc, kf, threshold):
   percentgrid[percentgrid<threshold] = kf #assign fine k value
   return percentgrid
 
-kl1 = kloader('percentl1.tif',kc,kf,threshold)
-kl2 = kloader('percentl2.tif',kc,kf,threshold)
-kl3 = kloader('percentl3.tif',kc,kf,threshold)
-kl4 = kloader('percentl4.tif',kc,kf,threshold)
-kl5 = kloader('percentl5.tif',kc,kf,threshold)
-kl6 = kloader('percentl6.tif',kc,kf,threshold)
-kl7 = kloader('percentl7.tif',kc,kf,threshold)
-kl8 = kloader('percentl8.tif',kc,kf,threshold)
-kl9 = kloader('percentl9.tif',kc,kf,threshold)
+kl1 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl1.tif',kc,kf,threshold)
+kl2 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl2.tif',kc,kf,threshold)
+kl3 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl3.tif',kc,kf,threshold)
+kl4 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl4.tif',kc,kf,threshold)
+kl5 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl5.tif',kc,kf,threshold)
+kl6 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl6.tif',kc,kf,threshold)
+kl7 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl7.tif',kc,kf,threshold)
+kl8 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl8.tif',kc,kf,threshold)
+kl9 = kloader(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\large_files\percentl9.tif',kc,kf,threshold)
 kl10 = kl9-kl9+kb
 
 khlayers = [kl1,kl2,kl3,kl4,kl5,kl6,kl7,kl8,kl9,kl10]
@@ -264,7 +239,7 @@ kvlayers=np.divide(khlayers,10.)
 # Define wells
 
 # Import well data from .csv file
-dfwel = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/2002_pumping_V2.csv?token=AOLJKYQ7WAUJVO2JL55VRYK7BYM4C')
+dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\2002_pumping_V2.csv')
 dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
 # Trim dataframe with well information to the model domain
@@ -288,7 +263,7 @@ dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_
 #print(dfwel)
 
 #--------------------------------------------------
-# Define Drains
+# Define drains
 
 # Add cells to the drain package wherever low-k material is at land surface.  These are cells in layer 1 with hydraulic conductivity k = kf.
 
@@ -323,8 +298,13 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 # Create the MODFLOW model object
 
 # Create a MODFLOW model object and run with MODFLOW 2005.
-modelname = "my_model" # name the model
-m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = 'mf2005') # create model object m
+modelname = 'my_model' # name the model
+exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
+model_dir = os.path.dirname(os.path.dirname(os.getcwd())) #define the model workspace as the GitHub folder
+m = flopy.modflow.Modflow(modelname, version='mf2005', exe_name=exe_dir, #create model object m
+                          model_ws=model_dir)
+
+flopy.modflow.Modflow()
 
 #--------------------------------------------------
 # Append the discretization package to the model object
@@ -333,8 +313,8 @@ m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = 'mf2005') # 
 # See https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm 
 dis = flopy.modflow.ModflowDis(model=m, nlay=nlay, nrow=nrow, ncol=ncol, 
                                delr=dx, delc=dy, top=topgrid, botm=botgrids, 
-                               itmuni = 4, lenuni = 1, 
-                               nper=nper, steady=steady)
+                               itmuni = 4, lenuni = 1, nper=nper, 
+                               steady=steady)
 
 #--------------------------------------------------
 # Basic package
@@ -458,27 +438,28 @@ oc = flopy.modflow.ModflowOc(model=m, stress_period_data=spd, compact=True)
 
 # We will start by using the PCG solver with default settings
 #pcg = flopy.modflow.ModflowPcg(model=m)
-pcg = flopy.modflow.ModflowPcg(model=m,mxiter=200,iter1=50,hclose=1e-03,rclose=1e-03,relax=0.98,damp=0.3)
+pcg = flopy.modflow.ModflowPcg(model=m, mxiter=200, iter1=50, hclose=1e-03, 
+                               rclose=1e-03, relax=0.98, damp=0.3)
 
 #%% Plot model inputs (boundary conditions, elevations)
 
 #--------------------------------------------------
 ''''Plot grid and boundary conditions'''
 
-plt.figure(figsize=(10,10)) #create 10 x 10 figure
+plt.figure(figsize=(10, 10)) #create 10 x 10 figure
 modelmap = flopy.plot.PlotMapView(model=m, layer=0)
 #grid = modelmap.plot_grid()
 ib = modelmap.plot_ibound()
 rvr = modelmap.plot_bc(ftype='RIV')
 #add labels and legend
-plt.xlabel('Lx (ft)',fontsize = 14)
-plt.ylabel('Ly (ft)',fontsize = 14)
+plt.xlabel('Lx (ft)', fontsize = 14)
+plt.ylabel('Ly (ft)', fontsize = 14)
 plt.title('Ibound', fontsize = 15, fontweight = 'bold')
-plt.legend(handles=[mp.patches.Patch(color='blue',label='Const. Head',ec='black'),
-                   mp.patches.Patch(color='white',label='Active Cell',ec='black'),
-                   mp.patches.Patch(color='black',label='Inactive Cell',ec='black'),
-                   mp.patches.Patch(color='green',label='River',ec='green')],
-                   bbox_to_anchor=(1.5,1.0))
+plt.legend(handles=[mp.patches.Patch(color='blue', label='Const. Head', ec='black'),
+                   mp.patches.Patch(color='white', label='Active Cell', ec='black'),
+                   mp.patches.Patch(color='black', label='Inactive Cell', ec='black'),
+                   mp.patches.Patch(color='green', label='River', ec='green')],
+                   bbox_to_anchor=(1.5, 1.0))
 plt.show()
 
 #--------------------------------------------------
@@ -592,6 +573,8 @@ if not success:
 
 #%% PLOT OUTPUT DATA
 
+os.chdir(model_dir)
+
 #--------------------------------------------------
 '''Extract binary data from head and flow files'''
 
@@ -649,9 +632,7 @@ plt.show()
 #%% CALIBRATION
 
 '''
-
 "Can it wait for a bit?  I'm in the middle of some calibrations..."
-
 '''
 
 #--------------------------------------------------
@@ -659,7 +640,7 @@ plt.show()
 
 # Import the observation well data as a dataframe
 # "SB_Potent_Surface_points.csv"
-pumping_ob = pd.read_csv('https://raw.githubusercontent.com/dbabrams/ShallowDolomite_Group/master/pumping/SB_Potent_Surface_points.csv?token=AOLJKYVBUPMW5FKZK2TPE427BYM5W')
+pumping_ob = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\SB_Potent_Surface_points.csv')
 
 # Trim the dataframe to the model domain
 pumping_ob = pumping_ob.loc[pumping_ob['lambx']<nex]
@@ -699,12 +680,15 @@ mean_abs = pumping_ob.absolute.mean()
 print("Mean Error:", round(mean,1), 'ft')
 print("Mean Absolute Error:", round(mean_abs,1), 'ft')
 
-# Calculate the standard deviation of absolute error
-sum1 = 0
-for i in pumping_ob.absolute.values:
-  sum1 += (i - mean_abs)**2
-std = np.sqrt(sum1/len(pumping_ob.absolute.values))
-print('Standard Deviation:', std)
+# Calculate the standard deviation of the error
+pumping_ob['diff^2'] = (pumping_ob.error-mean)**2
+std = math.sqrt(pumping_ob['diff^2'].mean())
+print('Standard Deviation:', round(std,1), 'ft')
+ 
+# Calculate the RMS error
+pumping_ob['error^2'] = pumping_ob.error**2
+RMS = math.sqrt(np.mean(pumping_ob['error^2']))
+print('RMS error:', round(RMS,1), 'ft')
 
 #--------------------------------------------------
 
@@ -779,21 +763,24 @@ plt.show()
 
 # Define the area over which to plot data
 
+# Define the transformation from Lambert x/y (Illimap) to lat/long (WGS84, or EPSG 4326)
+transformer_to_wgs84 = Transformer.from_crs(illimap,"epsg:4326")
+
 # Create and populate new columns in the "pumping_ob" dataframe for the latitudes and longitudes of each observation well
 for value in pumping_ob.index:
-  pumping_ob.loc[value,'lat'], pumping_ob.loc[value,'long'] = pyproj.transform(illimap,wgs84,pumping_ob.loc[value,'lambx']*0.3048,pumping_ob.loc[value,'lamby']*0.3048) #must convert Lambert x/y from ft to m
+  pumping_ob.loc[value,'lat'], pumping_ob.loc[value,'long'] = transformer_to_wgs84.transform(pumping_ob.loc[value,'lambx']*0.3048,pumping_ob.loc[value,'lamby']*0.3048) #must convert Lambert x/y from ft to m (*0.3048) before transforming to lat/long
 
-#Conduct the Universal Kriging
+# Conduct the Universal Kriging
 UK = UniversalKriging(pumping_ob['long'], pumping_ob['lat'],pumping_ob['error'], variogram_model='spherical',nlags=6)
 
-#Create xpoints and ypoints in space, with 0.01 spacing
+# Create xpoints and ypoints in space, with 0.01 spacing
 xpoints = np.arange(sw_long,ne_long,0.01)
 ypoints = np.arange(sw_lat,ne_lat,0.01)
 
-# create a meshgrid with xpoints and ypoints, to be used later in the code
+# Create a meshgrid with xpoints and ypoints, to be used later in the code
 X,Y = np.meshgrid(xpoints,ypoints)
 
-# calculate the interpolated grid and fill values.
+# Calculate the interpolated grid and fill values.
 z, var = UK.execute('grid', xpoints, ypoints)
 z = z.filled(fill_value=None)
 
@@ -863,7 +850,7 @@ cset_fill=plt.imshow(z,vmin=-100,vmax=100,cmap=plt.cm.coolwarm,origin='lower',ex
 #cset_fill = plt.contourf(X,Y,z,vmin=-100,vmax=100,cmap=plt.cm.coolwarm)
 
 # Label contours (makes use of pylab)
-pylab.clabel(cset_contour, inline=1, fontsize=10,fmt='%1.0f',colors='black')
+pylab.clabel(cset_contour, inline=True, fontsize=10,fmt='%1.0f',colors='black')
 
 # Plot the points that were measured
 points=plt.scatter(pumping_ob['long'], pumping_ob['lat'], marker=".", color="black", label="Data Points")
@@ -997,10 +984,8 @@ cbc_f = flopy.utils.binaryfile.CellBudgetFile(modelname+'.cbc')
 
 # Import a zone input file
 # The zone input file is a text file that assigns a zone to each cell in the model
-uploaded = files.upload() #upload the most recent zone input file.  Be sure to match the file name below to the actual name of the file you would like to upload.
-zon = flopy.utils.zonbud.read_zbarray('zone_file_65x65.txt') #read_zbarray is used to read in the zone input file as an array
+zon = flopy.utils.zonbud.read_zbarray(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\zonebudget\zone_input_file.txt') #read_zbarray is used to read in the zone input file as an array
 
-del uploaded
 
 # Create a ZoneBudget object and get the budget record array
 # set zone 1 as "upper half"; zone 2 as "lower half"
@@ -1013,11 +998,3 @@ zb.get_budget()
 
 # Note:  The zone input file only needs to be uploaded once.  Check the "Files" tab on the left to see if it has already been uploaded.
 # If the zone input file has already been uploaded, you can click "Cancel upload" in the output window below.
-
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
-#--------------------------------------------------
