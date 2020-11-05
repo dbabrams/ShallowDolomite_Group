@@ -26,7 +26,7 @@ NOTE:
 
 #%%
 import os
-os.environ['GDAL_DATA'] = r'D:\anaconda3\Library\share\gdal'
+os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\gdal'
 
 #%% IMPORT PACKAGES
 
