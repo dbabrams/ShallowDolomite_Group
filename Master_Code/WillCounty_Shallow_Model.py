@@ -20,8 +20,7 @@ X Download MF2005, MFNWT, and MT3DMS executable files
 
 #%%
 import os
-os.environ['GDAL_DATA'] = r'C:\Users\Pu\anaconda3\Library\share\gdal'
-
+os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\gdal'
 
 #%% IMPORT PACKAGES
 
