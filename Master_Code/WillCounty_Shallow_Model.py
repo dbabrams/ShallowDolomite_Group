@@ -17,6 +17,11 @@ To-Do:
 '''
 
 
+#%% SPECIFY TRANSIENT OR STEADY STATE
+
+#steady = [True] #specify if stress period is transient or steady-state
+steady = [False]
+
 #%%
 import os
 os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\gdal'
@@ -89,8 +94,12 @@ dy = 2000
 nrow = int(Ly/dy) # Number of rows
 ncol = int(Lx/dx) # Number of columns
 
-nper = 1 #specify number of stress periods
-steady = [True] #specify if stress period is transient or steady-state
+# Specify number of stress periods
+# Conditions must remain constant over each stress period
+if steady == True: 
+    nper = 1    # steady state mode has 1 stress period
+else:
+    nper = 70 # transient mode has 70 stress periods (1950 - 2019)
 
 #--------------------------------------------------
 # Define river elevations
@@ -223,30 +232,56 @@ kvlayers=np.divide(khlayers,10.)
 #--------------------------------------------------
 # Define wells
 
-# Import well data from .csv file
-dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\steady\2002_pumping_V2.csv')
-dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
+if steady == True:
+    # Import well data from .csv file
+    dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\steady\2002_pumping_V2.csv')
+    dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
-# Trim dataframe with well information to the model domain
-dfwel = dfwel.loc[dfwel['lam_x']<nex]
-dfwel = dfwel.loc[dfwel['lam_y']<ney]
-dfwel = dfwel.loc[dfwel['lam_x']>swx]
-dfwel = dfwel.loc[dfwel['lam_y']>swy]
+    # Trim dataframe with well information to the model domain
+    dfwel = dfwel.loc[dfwel['lam_x']<nex]
+    dfwel = dfwel.loc[dfwel['lam_y']<ney]
+    dfwel = dfwel.loc[dfwel['lam_x']>swx]
+    dfwel = dfwel.loc[dfwel['lam_y']>swy]
 
-# Put the data into the format required for the well package, with columns for layer, row, column, and flux
-# Assign all wells to bedrock layer (10 layers but starts at 0 so the last layer is 9)
-dfwel['lay'] = 9
-# Convert lamx to column and lamy to row
-dfwel['row'] = np.trunc((ney-dfwel['lam_y'])/dy)
-dfwel['col'] = np.trunc((dfwel['lam_x']-swx)/dx)
-# Define the flux as the pumpage data from the imported file and convert from gal/year to ft^3/day to match the units of the model. Negative pumpage denotes removal of water from the system.
-dfwel['flux']=dfwel['2002']*-1/2730.39
+    # Put the data into the format required for the well package, with columns for layer, row, column, and flux
+    # Assign all wells to bedrock layer (10 layers but starts at 0 so the last layer is 9)
+    dfwel['lay'] = 9
+    # Convert lamx to column and lamy to row
+    dfwel['row'] = np.trunc((ney-dfwel['lam_y'])/dy)
+    dfwel['col'] = np.trunc((dfwel['lam_x']-swx)/dx)
+    # Define the flux as the pumpage data from the imported file and convert from gal/year to ft^3/day to match the units of the model. Negative pumpage denotes removal of water from the system.
+    dfwel['flux']=dfwel['2002']*-1/2730.39
 
-# Drop unneeded columns
-dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_known','lam_x','lam_y','2002'], axis=1)
+    # Drop unneeded columns
+    dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_known','lam_x','lam_y','2002'], axis=1)
 
-#print(dfwel)
+    #print(dfwel)
 
+else:
+    # Import well data from .csv file
+    dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\transient\transient_pumping_WillCounty.csv')
+    dfwel = dfwel.set_index('pnum') # assign index as p_number so that other columns can be deleted
+    
+    # Trim dataframe with well information to the model domain
+    dfwel = dfwel.loc[dfwel['lam_x']<nex]
+    dfwel = dfwel.loc[dfwel['lam_y']<ney]
+    dfwel = dfwel.loc[dfwel['lam_x']>swx]
+    dfwel = dfwel.loc[dfwel['lam_y']>swy]
+    
+    # Put the data into the format required for the well package, with columns for layer, row, column, and flux
+    # Assign all wells to bedrock layer (10 layers but starts at 0 so the last layer is 9)
+    dfwel['lay'] = 9
+    # Convert lamx to column and lamy to row
+    dfwel['row'] = np.trunc((ney-dfwel['lam_y'])/dy)
+    dfwel['col'] = np.trunc((dfwel['lam_x']-swx)/dx)
+    # Define the flux as the pumpage data from the imported file and convert from gal/year to ft^3/day to match the units of the model. Negative pumpage denotes removal of water from the system.
+    dfwel['flux']=dfwel['2002']*-1/2730.39
+
+    # Drop unneeded columns
+    dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','depth_total_last_known','lam_x','lam_y','2002'], axis=1)
+
+    #print(dfwel)
+    
 #--------------------------------------------------
 # Define drains
 
@@ -292,12 +327,22 @@ m = flopy.modflow.Modflow(modelname, version='mf2005', exe_name=exe_dir, #create
 #--------------------------------------------------
 # Append the discretization package to the model object
 
-# Length and time are feet (1) and days (4).
-# See https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm 
-dis = flopy.modflow.ModflowDis(model=m, nlay=nlay, nrow=nrow, ncol=ncol, 
-                               delr=dx, delc=dy, top=topgrid, botm=botgrids, 
-                               itmuni = 4, lenuni = 1, nper=nper, 
-                               steady=steady)
+# Length and time are feet (1) and days (4)
+# See https://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm
+if steady == True:
+    dis = flopy.modflow.ModflowDis(model=m, nlay=nlay, nrow=nrow, ncol=ncol, 
+                                   delr=dx, delc=dy, top=topgrid, 
+                                   botm=botgrids, itmuni = 4, lenuni = 1, 
+                                   nper=nper, steady=steady)
+else:
+    dis = flopy.modflow.ModflowDis(model=m, nlay=nlay, nrow=nrow, ncol=ncol, 
+                                   delr=dx, delc=dy, top=topgrid, 
+                                   botm=botgrids, itmuni=4, lenuni=1, 
+                                   nper=nper, steady=steady, 
+                                   perlen=365 * np.ones(nper), 
+                                   start_datetime='1/1/1950')
+# For transient conditions, there are 70 stress periods of length 365 days, 
+# starting on 1/1/1950
 
 #--------------------------------------------------
 # Basic package
