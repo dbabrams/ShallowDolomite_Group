@@ -960,6 +960,8 @@ print(pumping_ob.error.max())
 
 #%% PEST
 
+# Look into "pyemu"; do a quick Google search for moving forward with PEST
+
 #--------------------------------------------------
 '''Define a parameter to modify'''
 
