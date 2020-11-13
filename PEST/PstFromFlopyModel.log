@@ -1,0 +1,26 @@
+2020-11-13 12:41:52.491156 starting: opening PstFromFlopyModel.log for logging
+2020-11-13 12:41:52.491156 starting: loading flopy model
+2020-11-13 12:41:52.838437 finished: loading flopy model took: 0:00:00.347281
+2020-11-13 12:41:52.838437 starting: updating model attributes
+2020-11-13 12:41:52.838437 finished: updating model attributes took: 0:00:00
+2020-11-13 12:41:52.838437 WARNING: removing existing 'new_model_ws
+2020-11-13 12:41:53.862935 starting: writing new modflow input files
+2020-11-13 12:41:54.783018 finished: writing new modflow input files took: 0:00:00.920083
+2020-11-13 12:41:54.784015 WARNING: using flopy binary to execute the model:my_model.nam
+2020-11-13 12:41:54.784015 forward_run line:pyemu.os_utils.run('mf2005 my_model.nam 1>my_model.nam.stdout 2>my_model.nam.stderr')
+2020-11-13 12:41:54.784015 starting: setting up 'new_model_ws\arr_org' dir
+2020-11-13 12:41:54.784972 finished: setting up 'new_model_ws\arr_org' dir took: 0:00:00.000957
+2020-11-13 12:41:54.784972 starting: setting up 'new_model_ws\arr_mlt' dir
+2020-11-13 12:41:54.784972 finished: setting up 'new_model_ws\arr_mlt' dir took: 0:00:00
+2020-11-13 12:41:54.809907 starting: setting up pilot point process
+2020-11-13 12:41:54.809907 WARNING: pp_space is None, using 10...
+
+2020-11-13 12:41:54.809907 WARNING: pp_geostruct is None, using ExpVario with contribution=1 and a=(pp_space*max(delr,delc))
+2020-11-13 12:41:54.824866 pp_dict: {0: ['rech0']}
+2020-11-13 12:41:54.824866 starting: calling setup_pilot_point_grid()
+2020-11-13 12:41:55.173629 117 pilot point parameters created
+2020-11-13 12:41:55.174589 pilot point 'pargp':rech0
+2020-11-13 12:41:55.174589 finished: calling setup_pilot_point_grid() took: 0:00:00.349723
+2020-11-13 12:41:55.176584 starting: calculating factors for p=rech0, k=0
+2020-11-13 12:41:55.178581 saving krige variance file:new_model_ws\pp_k0_general_zn.var.dat
+2020-11-13 12:41:55.178581 saving krige factors file:new_model_ws\pp_k0_general_zn.fac
