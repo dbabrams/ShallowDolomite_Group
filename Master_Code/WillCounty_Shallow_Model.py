@@ -229,7 +229,7 @@ kvlayers=np.divide(khlayers,10.)
 # Define wells
 
 # Import well data from .csv file
-dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\2002_pumping_V2.csv')
+dfwel = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\steady\2002_pumping_V2.csv')
 dfwel = dfwel.set_index('p_num') #assign index as p_number so that other columns can be deleted
 
 # Trim dataframe with well information to the model domain
@@ -628,7 +628,7 @@ plt.show()
 
 # Import the observation well data as a dataframe
 # "SB_Potent_Surface_points.csv"
-pumping_ob = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\SB_Potent_Surface_points.csv')
+pumping_ob = pd.read_csv(r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\pumping\steady\SB_Potent_Surface_points.csv')
 
 # Trim the dataframe to the model domain
 pumping_ob = pumping_ob.loc[pumping_ob['lambx']<nex]
@@ -959,8 +959,6 @@ print(pumping_ob.error.min())
 print(pumping_ob.error.max())
 
 #%% PEST
-
-# Look into "pyemu"; do a quick Google search for moving forward with PEST
 
 #--------------------------------------------------
 '''Define a parameter to modify'''
