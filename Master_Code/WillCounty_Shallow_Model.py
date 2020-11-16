@@ -289,7 +289,8 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 
 # Create a MODFLOW model object and run with MODFLOW 2005.
 modelname = 'my_model' # name the model
-exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
+#exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
+exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\MODFLOW-NWT_64.exe' #define the file path for the mfnwt executable
 model_dir = os.path.dirname(os.path.dirname(os.getcwd())) #define the file path for any model files
 m = flopy.modflow.Modflow(modelname, version = 'mf2005', exe_name = exe_dir, model_ws = model_dir) #create model object m 
 
