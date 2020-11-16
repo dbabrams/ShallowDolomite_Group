@@ -72,7 +72,7 @@ bc_props = []
 
 # Here were are building a list of stress period, layer pairs (zero-based) 
 # that we will use to setup obserations from every active model cell for a 
-#given pair
+# given pair
 
 hds_kperk = []
 for iper in range(m.nper):
@@ -92,7 +92,3 @@ mfp = pyemu.helpers.PstFromFlopyModel(model=nam_file, new_model_ws=new_model_ws,
                                       zone_props=zone_props, grid_props=grid_props, remove_existing=True, 
                                       sfr_pars=False, sfr_obs=False, hds_kperk=hds_kperk, 
                                       use_pp_zones=True)
-
-EXE_DIR = os.path.join("..","bin")
-if "window" in platform.platform().lower():
-    EXE_DIR = os.path.join(EXE_DIR,"win")
