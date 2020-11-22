@@ -512,11 +512,16 @@ plt.legend(handles=[
 plt.show()
 
 #--------------------------------------------------
+#%%
 '''Plot transects'''
 
-plt.figure(figsize=(10,10)) #create 10 x 10 figure
+plt.figure(figsize=(18,8)) #create 10 x 10 figure
 modelxsect = flopy.plot.PlotCrossSection(model = m, line={"row":22}) #use plotmapview to attach plot to model. row indicates west to east 
 #modelxsect = flopy.plot.PlotCrossSection(model = m, line={"column":15}) #plots north-south transect
+
+# add "west","east" text
+plt.text(x=5000,y=750,s="West",fontsize=20)
+plt.text(x=185000,y=750,s='East',fontsize=20)
 
 # Create colormap of named colors
 colors = ["saddlebrown","gray","lightgoldenrodyellow"]
@@ -527,9 +532,19 @@ khlaynp = np.array(khlayers)
 lines = modelxsect.plot_array(khlaynp,norm=norm, cmap=cmap)
 rvr = modelxsect.plot_bc(ftype='RIV')
 modelxsect.plot_ibound()
+
+# add a legend to the plot
+plt.legend(handles=[
+    mp.patches.Patch(color='saddlebrown',label='fine'),
+    mp.patches.Patch(color='lightgoldenrodyellow',label='coarse'),
+    mp.patches.Patch(color='gray',label='bedrock')],loc='lower left')
+
+plt.xlabel('Distance (ft)',fontsize=15)
+plt.ylabel('Elevation (ft)',fontsize=15)
 plt.show()
 
 #--------------------------------------------------
+#%%
 '''Plot Transmissivity'''
 
 # Horizontal T = sum(k*b), for each layer.  k is the hydraulic conductivity, and b is the layer thickness
@@ -765,8 +780,8 @@ for value in pumping_ob.index:
 UK = UniversalKriging(pumping_ob['long'], pumping_ob['lat'],pumping_ob['error'], variogram_model='spherical',nlags=6)
 
 # Create xpoints and ypoints in space, with 0.01 spacing
-xpoints = np.arange(sw_long,ne_long,0.01)
-ypoints = np.arange(sw_lat,ne_lat,0.01)
+xpoints = np.arange(sw_long,ne_long+0.01,0.01)
+ypoints = np.arange(sw_lat,ne_lat+0.01,0.01)
 
 # Create a meshgrid with xpoints and ypoints, to be used later in the code
 X,Y = np.meshgrid(xpoints,ypoints)
@@ -859,6 +874,7 @@ cax = fig.add_axes([0.94, 0.39, 0.25, 0.03])
 fig.colorbar(cset_fill, cax=cax, orientation='horizontal',label='Error (ft difference)')
 plt.show()
 
+#%%
 '''Large plot'''
 
 # Create a figure
