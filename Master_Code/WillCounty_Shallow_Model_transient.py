@@ -89,8 +89,22 @@ dy = 2000
 nrow = int(Ly/dy) # Number of rows
 ncol = int(Lx/dx) # Number of columns
 
-nper = 1 #specify number of stress periods
-steady = [False] #specify if stress period is transient or steady-state
+years = []
+for i in range(1950,2020):
+    i = str(i)
+    years.append(i)
+
+nper = len(years) #specify number of stress periods
+perlen = 365.25 * np.ones(nper) # define the length of each stress period as 
+                                # 365.25 days (365 days per year plus a leap 
+                                # day every 4 years)
+nstp = 1 # number of timesteps (1 for now, to test functionality)
+start_datetime = '1/1/1950' # define the starting datetime of the simulation 
+                            # as January 1, 1950
+
+steady = []
+for i in range(nper):
+    steady.append(False) #specify if stress period is transient or steady-state
 
 #--------------------------------------------------
 # Define river elevations
@@ -236,30 +250,24 @@ dfwel = dfwel.loc[dfwel['lam_y']>swy]
 # Define the flux for each year as the pumpage data from the imported file 
 # and convert from gal/year to ft^3/day to match the units of the model.
 # Negative pumpage denotes removal of water from the system.
-years = []
-for i in range(1950,2020):
-    i = str(i)
-    years.append(i)
-
-#print(years)
 
 for year in years:
     dfwel[year] = np.float64(dfwel[year]) * -1 / 2730.39
 
 # Define the location of each well as layer, row, and column
-# Assign all wells to bedrock layer (10 layers but starts at 0 so the last layer is 9)
+# Assign all wells to bedrock layer (10 layers but starts at 0 so the last 
+# layer is 9)
 dfwel['lay'] = 9
+
 # Convert lamx to column and lamy to row
 dfwel['row'] = np.trunc((ney-dfwel['lam_y'])/dy)
 dfwel['col'] = np.trunc((dfwel['lam_x']-swx)/dx)
 
-#dfwel['flux']=dfwel['2002']*-1/2730.39
-
-# Drop unneeded columns
+# Drop any columns that are not needed
 dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','total_name',
                     'depth_total_last_known','lam_x','lam_y'], axis=1)
 
-print(dfwel)
+#print(dfwel)
 
 #--------------------------------------------------
 # Define drains
@@ -298,9 +306,11 @@ dfdrn['cond'] = kf*dx*dy/3 #this is the conductance between the cell and the dra
 
 # Create a MODFLOW model object and run with MODFLOW 2005.
 modelname = 'my_model' # name the model
-exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
-model_dir = os.path.dirname(os.path.dirname(os.getcwd())) #define the model workspace as the GitHub folder
-m = flopy.modflow.Modflow(modelname, version='mf2005', exe_name=exe_dir, #create model object m
+#exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\mf2005.exe' #define the file path for the mf2005 executable
+exe_dir = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\executables\MODFLOW-NWT_64.exe' #define the file path for the MODFLOW-NWT executable (64-bit)
+model_dir = os.path.dirname(os.path.dirname(os.getcwd()))
+# define the model workspace as the "GitHub" folder on your machine
+m = flopy.modflow.Modflow(modelname, version='mfnwt', exe_name=exe_dir, # create model object m
                           model_ws=model_dir)
 
 #--------------------------------------------------
@@ -364,10 +374,16 @@ rch = flopy.modflow.mfrch.ModflowRch(model=m, ipakcb=1, nrchop=3, rech = recharg
 
 # Put into a format that MODFLOW wants
 arriv = dfriv.values
-riverdata = {0: arriv} #dictionary assigning river data; key (0) is the stress period
+
+riverdata = {}  # create a blank dictionary, where we will store the river 
+                # data for each year
+for i in range(nper):
+    riverdata[i] = arriv    # dictionary assigning river data; key is the 
+                            # stress period (starting with 0)
 
 # Create the river package (RIV)
-riv = flopy.modflow.mfriv.ModflowRiv(model=m, ipakcb=1, stress_period_data = riverdata)
+riv = flopy.modflow.mfriv.ModflowRiv(model=m, ipakcb=1, 
+                                     stress_period_data = riverdata)
 #ipakcb=1 signals that cell-by-cell budget data should be saved
 
 #--------------------------------------------------
@@ -403,7 +419,11 @@ print(ardrn_initial-ardrn_final,'items were removed')
 #--------------------------------------------------
 
 # Put into a format that MODFLOW wants
-draindata = {0: ardrn} #dictionary assigning drain data; key (0) is the stress period
+draindata = {}  # create a blank dictionary, where we will store the drain 
+                # data for each year
+for i in range(nper):
+    draindata[i] = ardrn    # dictionary assigning drain data; key is the 
+                            # stress period (starting with zero)
 # Here, "draindata" functions similarly to "riverdata" for creating the river package
 
 # Create the drain package (DRN)
@@ -414,8 +434,19 @@ drn = flopy.modflow.mfdrn.ModflowDrn(model=m, ipakcb=1, stress_period_data = dra
 # Well package
 
 # Put into a format that MODFLOW wants
-arwell = dfwel.values
-welldata = {0: arwell} #dictionary assigning well data; key (0) is the stress period
+welldata = {}   # create a blank dictionary, where we will store the well 
+                # data for each year
+
+# Iterate over all years to store the well data for each year as an entry, 
+# in list form, in the well data dictionary
+for i in range(nper):
+    arwell = [] # arwell is the array of well data for a given year, which is 
+                # overwritten each time the loop advances to the next year
+    for j in dfwel.index: # the format for well data is [lay, row, col, Q]
+        arwell.append([dfwel.loc[j,'lay'], dfwel.loc[j,'row'], 
+                       dfwel.loc[j,'col'], dfwel.loc[j,years[i]]])
+    welldata[i] = arwell    # add each year's data to the dictionary; key is 
+                            # the stress period (starting with 0)
 # Here, "welldata" functions similarly to "riverdata" and "draindata" in the previous code blocks
 
 # Create the well package (WEL)
@@ -579,10 +610,13 @@ os.chdir(model_dir)
 headobj = flopy.utils.binaryfile.HeadFile(modelname+'.hds')
 
 # Extract head data from head object
-head = headobj.get_data(totim=1.0)
+print(headobj.get_kstpkper())
+print(headobj.get_times())
+#head = headobj.get_data(totim=1.0) # totim=1.0
 
 #print(head[9]) #returns heads in the bottom layer, where pumping occurs
 
+#%% combine with above block
 #--------------------------------------------------
 '''Plot results with boundary conditions'''
 

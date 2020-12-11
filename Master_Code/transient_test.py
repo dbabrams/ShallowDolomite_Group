@@ -74,7 +74,12 @@ dy = 2000
 nrow = int(Ly/dy) # Number of rows
 ncol = int(Lx/dx) # Number of columns
 
-nper = 1 #specify number of stress periods
+years = []
+for i in range(1950,2020):
+    i = str(i)
+    years.append(i)
+
+nper = len(years) #specify number of stress periods
 steady = [False] #specify if stress period is transient or steady-state
 
 #--------------------------------------------------
@@ -221,12 +226,6 @@ dfwel = dfwel.loc[dfwel['lam_y']>swy]
 # Define the flux for each year as the pumpage data from the imported file 
 # and convert from gal/year to ft^3/day to match the units of the model.
 # Negative pumpage denotes removal of water from the system.
-years = []
-for i in range(1950,2020):
-    i = str(i)
-    years.append(i)
-
-#print(years)
 
 for year in years:
     dfwel[year] = np.float64(dfwel[year]) * -1 / 2730.39
@@ -245,3 +244,15 @@ dfwel = dfwel.drop(['isws_facility_id','owner','fac_well_num','total_name',
                     'depth_total_last_known','lam_x','lam_y'], axis=1)
 
 print(dfwel)
+
+#%%
+
+# lay row col Q
+
+welldata = {}
+
+for i in range(nper):
+    arwell = []
+    for j in dfwel.index:
+        arwell.append([dfwel.loc[j,'lay'], dfwel.loc[j,'row'], dfwel.loc[j,'col'], dfwel.loc[j,years[i]]])
+    welldata[i] = arwell
