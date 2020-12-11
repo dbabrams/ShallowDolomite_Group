@@ -6,7 +6,6 @@ Created on Thu Sep  3 14:59:49 2020
 """
 
 #%%
-
 '''
 To-Do:
 
@@ -16,6 +15,12 @@ To-Do:
 
 '''
 
+#$$
+'''
+Note:
+        Before running the model, make sure your current working directory is 
+        the \GitHub\ShallowDolomite_Group\Master_Code folder
+'''
 
 #%%
 import os
