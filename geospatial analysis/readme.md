@@ -1,1 +1,1 @@
-This folder is created to store geospatial analysis files based on GEOG 407
+This folder is created to store maps related to geospatial analysis on the Will County shallow aquifer model
