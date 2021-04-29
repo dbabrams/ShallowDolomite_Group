@@ -16,7 +16,6 @@ To-Do:
 
 '''
 
-
 #%%
 import os
 os.environ['GDAL_DATA'] = r'\\pri-fs1.ad.uillinois.edu\SWSGWmodeling\FloPy_Models\shallow_model\gdal'
@@ -375,10 +374,11 @@ print('The initial length of the drain array is',ardrn_initial)
 
 # Search through the river dataframe and the drain array for matches
 # If any river cells are included in the drain array, the following loops will remove them
-for i in range(len(dfriv)-1):
-  for j in range(len(ardrn)-1):
-    if dfriv.loc[i,'row']==np.float64(ardrn[j][1]) and dfriv.loc[i,'col']==np.float64(ardrn[j][2]):
-      ardrn.remove(ardrn[j])
+for i in range(len(dfriv)):
+    for entry in ardrn:
+        if dfriv.loc[i,'row']==np.float64(entry[1]) and \
+           dfriv.loc[i,'col']==np.float64(entry[2]):
+               ardrn.remove(entry)
 
 ardrn_final=len(ardrn)
 
